@@ -1,0 +1,16 @@
+{% extends "base_layout.html" %}
+{% load static %}
+{% block head %}
+    <title>GMS - User Dashboard</title>
+
+    <!-- Custom styles for this template -->
+
+{% endblock %}
+{% block content %}
+ <ul id="options">
+    {% for option in options %}
+        <li><a href="{{ option }}"><button type="button" class="btn btn-secondary m-1">{{option}}</button></a></li>
+    {% endfor %}
+ </ul>
+
+{% endblock %}

@@ -27,7 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+AUTH_USER_MODEL = 'webapp.MyUser'
+LOGIN_REDIRECT_URL = 'user_dashboard'
 # Application definition
 
 INSTALLED_APPS = [

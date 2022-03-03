@@ -1,0 +1,243 @@
+{% extends "base_layout.html" %}
+{% load static %} {% block head %}
+    <title>GMS - User Dashboard</title>
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}"/>
+
+{% endblock %}
+{% block content %}
+
+<main style="margin: auto 0" id="mainDiv">
+    <div class="container-sm border border-1 p-2 py-3 rounded shadow" >
+      <!-- send to calendar view -->
+      <div class="container-sm">
+        <a href="/user_dashboard/gym">
+          <button class="btn btn-primary float-sm-end" id="new-workout-tab" type="button">
+            Book New Workout
+          </button>
+        </a>
+      </div>
+  
+      <!-- Tabbed navigation -->
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="workout-tab" data-bs-toggle="tab" data-bs-target="#workout" type="button" role="tab" aria-controls="home" aria-selected="true">
+            Workouts
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="workout-diary-tab" data-bs-toggle="tab" data-bs-target="#workout-diary" type="button" role="tab" aria-controls="profile" aria-selected="false">
+            Workouts Diary
+          </button>
+        </li>
+  
+        <!-- <div class=" d-inline">
+                  <button class="btn btn-primary float-end">Book New Workout</button>
+              </div> -->
+      </ul>
+  
+  
+  
+      <!-- Workout Tab -->
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="workout" role="tabpanel" aria-labelledby="workout-tab">
+          <div class="container row p-3 g-3">
+  
+            <!-- your workout section -->
+            <div class="container col-md-8 px-5">
+              <div class="container p-3 rounded bg-success bg-gradient text-white d-flex align-items-center">
+                <!-- button to cancel workout-->
+                <button id="cancel-workout" class="btn btn-danger fs-2"
+                data-bs-toggle="modal" data-bs-target="#delete-workout">
+                  <span ><i class="bi bi-trash"></i></span>
+                </button>
+                <p class="m-0 flex-fill text-center fw-bold fs-3" id="mainWorkoutTitle">Your Workout</p>
+              </div>
+              <div class="container d-flex align-items-center py-3 text-center">
+                  <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="mainWorkoutTime">--:----</div>
+                  <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2" id="mainWorkoutDate">--/--/--</div>
+              </div>
+              <div class="container">
+                  id:<span id="mainWorkoutId">------</span>
+              </div>
+            </div>
+  
+            <!-- upcoming workouts list. -->
+            <div class="col-md-4 border " >
+              <div class="container fs-3 text-center">Upcoming</div>
+              <!-- the list -->
+              <div class="list-group overflow-auto" id="mainWorkoutTabList" style=" height: 50vh; max-height: 50vh;">
+                <div id="mainWorkoutTabLoader">Loading...</div>
+                <!-- <button class="list-group-item list-group-item-action upcomingWorkoutItem">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Monday, 25th at <span class="item-time-span">10:00AM</span></h5>
+                  </div>
+                  <p class="mb-1">25/08/21</p>
+                  <small class="text-muted">id:<span>3456789</span></small>
+                </button> -->
+  
+              </div>
+            </div>
+          </div>
+        </div>
+  
+  
+  
+        <!-- workout diary panel -->
+        <div class="tab-pane fade" id="workout-diary" role="tabpanel" aria-labelledby="workout-diary-tab">
+          <div class="container-sm row py-3 g-2">
+  
+            <!-- upcoming workout lists -->
+            <div class="col-md border rounded mx-1" >
+              <div class="container fs-3 text-center">Upcoming</div>
+              <!-- the list -->
+              <div class="list-group overflow-auto" id="workoutDiaryUpcomingTabList" style="height: 40vh; max-height: 40vh;">
+                <div id="diaryWorkoutTabLoader">Loading...</div>
+                <!-- <div class="list-group-item list-group-item-action ">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">25/08/21 - 10:00AM</h5>
+                  </div>
+                  <small class="text-muted">id:3456789</small>
+                </div> -->
+                
+  
+  
+              </div>
+            </div>
+  
+  
+            <!-- Finished workout lists -->
+            <div class="col-md border rounded mx-1" >
+              <div class="container fs-3 text-center">Finished</div>
+              <!-- the list -->
+              <div class="list-group overflow-auto" id="workoutDiaryTabFinishedList" style="height: 40vh; max-height: 40vh;">
+                <div id="diaryFinishedTabLoader">Loading...</div>
+                <!-- <div class="list-group-item list-group-item-action ">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">25/08/21 - 10:00AM</h5>
+                  </div>
+                  <small class="text-muted">id:3456789</small>
+                </div> -->
+  
+                
+  
+  
+              </div>
+            </div>
+  
+            <!-- Stats div -->
+  
+            <div class="col-lg-5 border rounded mx-1 bg-white" >
+              <div class="container fs-3 text-muted fw-bold ">Stats</div>
+              <!-- the list -->
+              <div class="p-3 fs-5" >
+                Remaining Trainings: <span id="remainingTrainings">--</span>
+              </div>
+              <div class="p-3 fs-5" >
+                Finished Trainings: <span id="finishedTrainings">--</span>
+              </div>
+              <div class="p-3 fs-5" >
+                Missed Trainings: <span id="missedTrainings">--</span>
+              </div>
+              <div class="p-3 fs-5 fw-bold" >
+                Total time in Gym: <span id="totalTimeGym">-h--m</span>
+              </div>
+            </div>
+  
+          </div>
+  
+          <!-- weeks abailability -->
+          <a href="/calendar/" class="container btn btn-success">
+            <div class="container fs-5 fw-bold ">Pump those numbers up! Check out this week's availability</div>
+  
+            
+            
+            <!-- <div class="container row justify-content-around text-center g-2">
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Mon
+                </button>
+              </a>
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Tue
+                </button>
+              </a>
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Wed
+                </button>
+              </a>
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Thu
+                </button>
+              </a>
+              
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Fri
+                </button>
+              </a>
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Sat
+                </button>
+              </a>
+              <a href="/calendar/" class="col">
+                <button class="btn btn-primary fs-5 fw-bold text-center">
+                  Sun
+                </button>
+              </a>           
+            </div>               -->
+            </a>
+        </div>
+      </div>
+    </div>
+  
+  
+  </main>
+  
+  
+  <!-- Modal -->
+  <div class="modal fade" id="delete-workout" tabindex="-1" aria-labelledby="delete-workoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="delete-workoutLabel">Cancel Workout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="container p-3 rounded bg-warning bg-gradient d-flex align-items-center">
+            <!-- button to cancel workout-->
+            
+            <p class="m-0 flex-fill text-center fs-3 ">Are You Sure You Wanna Delete?</p>
+          </div>
+          <div class="container d-flex align-items-center py-3 text-center">
+              <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="modalWorkoutTime">------</div>
+              <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2" id="modalWorkoutDate">--/--/--</div>
+          </div>
+          <div class="container">
+              id:<span id="modalWorkoutId">-</span>
+          </div>
+        </div>
+        <form action="/delete_booking/" method="post">
+            {% csrf_token %}
+        <div class="modal-footer">
+            <input type="hidden" id="idPost" value="" name="id">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="modalWorkoutDeleteButton">Delete</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+    <script>
+        let data = {{ user_schedule|safe }}
+    </script>
+    <script type="text/javascript" src="{% static 'js/user_dashboard.js' %}"></script>
+
+
+{% endblock %}

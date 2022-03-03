@@ -1,6 +1,7 @@
 from django.db import models
-from django.forms import ModelForm
-from django.contrib.auth.models import User, AbstractUser
+from django.contrib.auth.models import (
+    BaseUserManager, AbstractBaseUser
+)
 
 USER_TYPE = (
     ('RU', 'Resident User'),
@@ -26,75 +27,106 @@ class Condo(models.Model):
     address = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    max_users_gym = models.IntegerField(default=4)
 
     def __str__(self):
         return f'Condo Name: {self.name}   Address: {self.address}'
 
 
-class UserProfile(models.Model):
-    GENDER = (
-        ('M', 'Male'),
-        ('F', 'Female')
-    )
+class MyUserManager(BaseUserManager):
+    def create_user(self, email, date_of_birth, password=None):
+        """
+        Creates and saves a User with the given email, date of
+        birth and password.
+        """
+        if not email:
+            raise ValueError('Users must have an email address')
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=1, choices=GENDER)
-    birthday = models.DateField()
+        user = self.model(
+            email=self.normalize_email(email),
+            date_of_birth=date_of_birth,
+        )
+
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, date_of_birth, password=None):
+        """
+        Creates and saves a superuser with the given email, date of
+        birth and password.
+        """
+        user = self.create_user(
+            email,
+            password=password,
+            date_of_birth=date_of_birth,
+        )
+        user.is_admin = True
+        user.save(using=self._db)
+        return user
+
+
+class MyUser(AbstractBaseUser):
+    email = models.EmailField(
+        verbose_name='email address',
+        max_length=255,
+        unique=True,
+    )
+    date_of_birth = models.DateField()
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=11)
     user_type = models.CharField(max_length=2, choices=USER_TYPE, default='RU')
     user_status = models.CharField(max_length=1, choices=USER_STATUS_TYPE, default='A')
     address = models.CharField(max_length=100)
-    condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
+    # condo = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = MyUserManager()
+
+    USERNAME_FIELD = 'email'
+    #REQUIRED_FIELDS = ['date_of_birth'] #TODO: verify which is important
+
     def __str__(self):
-        return f'Username: {self.user.username}   Name: {self.user.first_name + self.user.last_name}'
+        return self.email
 
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
 
-# class User(AbstractUser):
-#     GENDER = (
-#         ('M', 'Male'),
-#         ('F', 'Female')
-#     )
-#
-#     gender = models.CharField(max_length=1, choices=GENDER)
-#     birthday = models.DateField()
-#     phone_number = models.CharField(max_length=11)
-#     user_type = models.CharField(max_length=2, choices=USER_TYPE, default='RU')
-#     user_status = models.CharField(max_length=1, choices=USER_STATUS_TYPE, default='A')
-#     address = models.CharField(max_length=100)
-#     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#
-#     def __str__(self):
-#         return f'Username: {self.username}   Name: {self.first_name + self.last_name}'
-#
-# And in your settings.py.
-#
-# AUTH_USER_MODEL = 'users.User'
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
 
 
 class SignupCode(models.Model):
     code = models.CharField(max_length=128)
-    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    user = models.OneToOneField(MyUser, on_delete=models.CASCADE)
+    condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
     use_status = models.BooleanField(default=False)
 
 
 class GymSession(models.Model):
     checkin_code = models.CharField(max_length=128, default=128 * '0')
-    day = models.DateField()
-    time = models.TimeField()
-    booked_user = models.ForeignKey(UserProfile, on_delete=models.PROTECT)
+    session_datetime = models.DateTimeField()
+    booked_user = models.ForeignKey(MyUser, on_delete=models.PROTECT)
     booking_status = models.CharField(max_length=1, choices=BOOKING_STATUS_TYPE, default='B')
 
     def __str__(self):
-        return f'Day {self.day} Time: {self.time} User {str(self.booked_user)}'
+        return f'Day {self.session_datetime} Time: User {str(self.booked_user)}'
 
 
 class Penalties(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
     penalty_amount = models.IntegerField()
     penalty_reason = models.CharField(max_length=100)
     penalty_status = models.BooleanField(default=False)
@@ -109,7 +141,7 @@ class Penalties(models.Model):
 
 class CondoParking(models.Model):
     stall_number = models.IntegerField()
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -118,7 +150,7 @@ class CondoParking(models.Model):
 
 class VisitorParking(models.Model):
     stall_number = models.IntegerField()
-    responsible_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    responsible_user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
     scheduled_date = models.DateField()
     visitor_name = models.CharField(max_length=64)
@@ -130,7 +162,7 @@ class VisitorParking(models.Model):
 
 class TennisCourt(models.Model):
     court_number = models.IntegerField()
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
 
     def __str__(self):
