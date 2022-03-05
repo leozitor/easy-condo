@@ -27,7 +27,7 @@ class Condo(models.Model):
     address = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    max_users_gym = models.IntegerField(default=4)
+    # max_users_gym = models.IntegerField(default=4)
 
     def __str__(self):
         return f'Condo Name: {self.name}   Address: {self.address}'

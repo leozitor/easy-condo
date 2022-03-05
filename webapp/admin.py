@@ -77,8 +77,6 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 
-
-
 class GymSessionAdmin(admin.ModelAdmin):
     list_display = ('id', 'checkin_code', 'session_datetime', 'booked_user', 'booking_status')
 

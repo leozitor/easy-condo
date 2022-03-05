@@ -3,7 +3,7 @@
     "model":"webapp.GymSession",
     "pk":1,
     "fields":{
-      "session_datetime": "2022-03-01 07:00:00",
+      "session_datetime": "2022-05-01 07:00:00",
       "booked_user": 1
     }
   },
@@ -11,7 +11,7 @@
     "model":"webapp.GymSession",
     "pk":2,
     "fields":{
-      "session_datetime": "2022-03-01 07:30:00",
+      "session_datetime": "2022-05-01 07:30:00",
       "booked_user": 1
     }
   },
@@ -19,7 +19,7 @@
     "model":"webapp.GymSession",
     "pk":3,
     "fields":{
-      "session_datetime": "2022-03-02 07:00:00",
+      "session_datetime": "2022-06-02 07:00:00",
       "booked_user": 1
     }
   },
@@ -27,7 +27,7 @@
     "model":"webapp.GymSession",
     "pk":4,
     "fields":{
-      "session_datetime": "2022-03-02 07:30:00",
+      "session_datetime": "2022-07-02 07:30:00",
       "booked_user": 1
     }
   },

@@ -4,13 +4,22 @@
 //create usage to post the booked session
 
 class Activity {
-    constructor(date, quantity){
+    constructor(date, quantity, label){
         this._date = date;
+        this._label = label
         this._quantity = quantity;
     }
 
     get date(){
         return this._date;
+    }
+
+    get label(){
+        return this._label;
+    }
+
+    getLabel(){
+        return this._label;
     }
 
     getDateShort(){
@@ -120,11 +129,8 @@ class Activity {
 
 
 //Module for workouts tab
-const BookingCalendar  = (()=>{
+const ActivityCalendar  = (()=>{
     let calendar = [];
-
-
-
 
 
     let fetchCalendar = () =>{
@@ -138,15 +144,21 @@ const BookingCalendar  = (()=>{
 
             //create 7 arrays, one for each day of the next 7 days
             //Then each day has 24 spots
+            // calendar = data.forEach(d => {
+            //   return new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count, d.label)
+            // })
+
+
             let counter = 0;
             for(i = 0; i < 7; i++){
                 calendar.push([]);
-                for(j=0; j<24; j++){
+                for(j=0; j<data.length/7; j++){
                     let d = data[counter];
-                    calendar[i].push(new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count));
+                    calendar[i].push(new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count, d.label));
                     counter++;
                 }
             }
+            console.log(calendar);
 
 
 
@@ -156,7 +168,7 @@ const BookingCalendar  = (()=>{
             if(calendar.length != 0){
                 console.log("received sessions");
                 //update workouts
-                _createSessions(0);
+                createActivitySessions(0);
                 //populate the footer 7 days buttons
                 _populateFooterButtons();
                 //disable loaders
@@ -185,11 +197,10 @@ const BookingCalendar  = (()=>{
 
     }
 
-    let _createSessions = (day) =>{
+    let createActivitySessions = (day) =>{
         //day is so we know which day session array we are taking from calendar
         let bookOnDate = document.getElementById("bookOnDate");
-        let morningSlots = document.getElementById("morningSlots");
-        let afternoonSlots = document.getElementById("afternoonSlots");
+        let slots = document.getElementById("slots");
 
         let newFlexDiv;
         calendar[day].forEach((ses,i)=>{
@@ -205,13 +216,27 @@ const BookingCalendar  = (()=>{
             //   <div class="bg-success text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">0/4</div>
             // </button>*2
             //</div>
+
+            // <div className="container d-flex flex-wrap px-4 py-2">
+            //     <!-- slots -->
+            //     <button className="row px-2 sessionBookingItem d-flex" data-bs-toggle="" data-bs-target="">
+            //         <div className="col fs-5" sday="7" smonth="3" syear="22" shour="0" smin="0"
+            //              sdateshort="07/03/22" sdatestring="Monday, March 7" sdatepythonformat="03/07/2022, 00:00">stall
+            //             1
+            //         </div>
+            //         <div className=" col border rounded bg-success text-white align-self-center bg-white">available
+            //         </div>
+            //     </button>
+            //
+            //
+            // </div>
             let button = document.createElement("button");
-            button.classList.add("list-group-item", "border", "list-group-item-action", "d-flex", "px-2", "sessionBookingItem");
+            button.classList.add("row","ms-0", "me-2", "p-2", "border","sessionBookingItem", "bg-white");
             button.setAttribute("data-bs-toggle", "modal");
             button.setAttribute("data-bs-target", "#book-workout");
 
             let firstDiv = document.createElement("div");
-            firstDiv.classList.add("fs-5", "align-items-center", "w-50");
+            firstDiv.classList.add("col", "fs-5", "align-self-center");
             firstDiv.setAttribute("sDay", ses.date.getDate());
             firstDiv.setAttribute("sMonth", ses.date.getMonth()+1);
             firstDiv.setAttribute("sYear", ses.getShortYear());
@@ -220,16 +245,21 @@ const BookingCalendar  = (()=>{
             firstDiv.setAttribute("sDateShort", ses.getDateShort());
             firstDiv.setAttribute("sDateString", ses.getDateString());
             firstDiv.setAttribute("sDatePythonFormat", ses.getDatePythonFormat());
-            firstDiv.textContent = ses.getTimeString();;
+            firstDiv.textContent = ses.getLabel();
 
             button.append(firstDiv);
 
             let secondDiv = document.createElement("div");
-            secondDiv.classList.add("border", "rounded", "row", "flex-grow-1", "mx-2", "align-items-center", "justify-content-center");
-            secondDiv.textContent = ses.quantity + "/4";
-            if(ses.quantity==3){
-                secondDiv.classList.add("bg-warning");
-            }else if(ses.quantity ==4){
+            secondDiv.classList.add("col", "border", "rounded", "align-self-center");
+            if(ses.quantity ==0){
+                secondDiv.textContent = "available"
+                secondDiv.classList.add("bg-success", "text-white");
+                //disable modal
+                button.setAttribute("data-bs-toggle", "");
+                button.setAttribute("data-bs-target", "");
+            }
+            else if(ses.quantity >= 1){
+                secondDiv.textContent = "Full"
                 secondDiv.classList.add("bg-danger", "text-white");
                 //disable modal
                 button.setAttribute("data-bs-toggle", "");
@@ -239,30 +269,8 @@ const BookingCalendar  = (()=>{
             }
 
             button.append(secondDiv);
-
             //end of div or start of div
-            if(i%2==0){
-                //start group of 2 slots
-                newFlexDiv = document.createElement("div");
-                newFlexDiv.classList.add("d-flex");
-
-                newFlexDiv.append(button);
-
-            }else{
-                //end group of 2 slots
-                newFlexDiv.append(button);
-
-                if(ses.date.getHours() > 12){
-                    //afternoon sessions
-                    afternoonSlots.append(newFlexDiv);
-
-                }else{
-                    //morning sessions
-                    morningSlots.append(newFlexDiv);
-                }
-
-
-            }
+            slots.append(button);
         })
 
         //create new Item Event Listeners
@@ -322,25 +330,16 @@ const BookingCalendar  = (()=>{
 
         buttons.forEach(b=>{
             b.addEventListener("click", ()=>{
-                let morningSlots = document.getElementById("morningSlots");
-                let afternoonSlots = document.getElementById("afternoonSlots");
+                let slots = document.getElementById("slots");
 
-                morningSlots.innerHTML = "";
-                afternoonSlots.innerHTML = "";
-                morningSlots.append(document.createElement("div").textContent = "Morning Time Slots");
-                afternoonSlots.append(document.createElement("div").textContent = "Afternoon Time Slots");
+                slots.innerHTML = "";
 
                 let loader = document.createElement("div");
-                loader.setAttribute("id", "morningLoader");
+                loader.setAttribute("id", "loader");
                 loader.textContent = "Loading..."
-                morningSlots.append(loader);
+                slots.append(loader);
 
-                let loader2 = document.createElement("div");
-                loader2.textContent = "Loading..."
-                loader2.setAttribute("id", "afternoonLoader");
-                afternoonSlots.append(loader2);
-
-                _createSessions(b.getAttribute("weekIndex"));
+                createActivitySessions(b.getAttribute("weekIndex"));
 
                 _changeLoaders(true);
             })
@@ -391,17 +390,15 @@ const BookingCalendar  = (()=>{
 
 
     let _changeLoaders = (success)=>{
-        let morningLoader = document.getElementById("morningLoader");
-        let afternoonLoader = document.getElementById("afternoonLoader");
+        let loader = document.getElementById("loader");
         let weeksLoader = document.getElementById("weeksLoader");
 
+
         if(success){
-            morningLoader.style.display = "none";
-            afternoonLoader.style.display = "none";
+            loader.style.display = "none";
             weeksLoader.style.display = "none";
         }else{
-            morningLoader.textContent = "No Schedule found!";
-            afternoonLoader.textContent = "No Schedule found!";
+            loader.textContent = "No Activity found!";
             weeksLoader.textContent = "No Schedule found!";
         }
 
@@ -413,7 +410,7 @@ const BookingCalendar  = (()=>{
 
 
 //create event listeners;
-window.onload = BookingCalendar.fetchCalendar();
+window.onload = ActivityCalendar.fetchCalendar();
 
 
 

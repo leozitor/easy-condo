@@ -19,68 +19,16 @@
     <!-- Calendar for today -->
     <!-- 6-12 16-22 or 6-12  4-10, let's do two columns, half an hour spots, 4 per spot-->
     <!-- 6 hours morning turn, 12 divs, 6 hours afternoon shift, 12 divs -->
-    <div class="container row g-2">
+    <div class="container row m-0 mb-2">
       <!-- Morning slots container -->
-      <div class="container col-md">
+      <div>Activity Slots</div>
+      <div class="container m-0">
         <!-- slots -->
-        <div class="list-group overflow-auto" id="morningSlots" style=" height: 50vh; max-height: 50vh;">
-          <div>Morning Time Slots</div>
+        <div class="container d-flex flex-wrap p-0" id="slots">
 
-<!--            <button class="list-group-item border list-group-item-action d-flex px-2 sessionBookingItem" data-bs-toggle="modal" data-bs-target="#book-workout"><div class="fs-5 align-items-center w-50" sday="2" smonth="3" syear="22" shour="6" smin="0" sdateshort="02/03/22" sdatestring="Wednesday, March 2" sdatepythonformat="03/02/2022, 06:00">6:00AM</div><div class="border rounded row flex-grow-1 mx-2 align-items-center justify-content-center bg-success text-white">0/4</div></button>-->
+<!--            <button class="list-group-item border list-group-item-action d-flex px-2 sessionBookingItem col-2" data-bs-toggle="modal" data-bs-target="#book-workout"><div class="fs-5 align-items-center w-50" sday="2" smonth="3" syear="22" shour="6" smin="0" sdateshort="02/03/22" sdatestring="Wednesday, March 2" sdatepythonformat="03/02/2022, 06:00">6:00AM</div><div class="border rounded row flex-grow-1 mx-2 align-items-center justify-content-center bg-success text-white">0/4</div></button>-->
 
-            <div id="morningLoader">Loading...</div>
-
-
-          <!-- <div class="d-flex">
-            <button class="list-group-item list-group-item-action d-flex px-2 sessionBookingItem"
-            data-bs-toggle="modal" data-bs-target="#book-workout">
-              <div class="fs-5 align-items-center w-50" bDay="" bMonth="" bYear="" bHour="" bMin="" bDateShort="25/08/21">06:00AM</div>
-              <div class="bg-success text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">0/4</div>
-            </button>
-            <button class="border list-group-item list-group-item-action d-flex px-2"
-            data-bs-toggle="modal" data-bs-target="#book-workout">
-              <div class="fs-5 align-items-center w-50">6:30AM</div>
-              <div class="bg-warning text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">3/4</div>
-            </button>
-          </div> -->
-
-
-
-
-          <!-- 4 spots square layout
-          <div class="d-flex">
-            <button class="border list-group-item list-group-item-action d-flex p-1 px-2"
-            data-bs-toggle="modal" data-bs-target="#book-workout">
-              <div class="fs-5 align-items-center w-50">6:00AM</div>
-              <div class="text-white  primary row row-cols-2 flex-grow-1 mx-2 g-1">
-                <div class="col"><div class="rounded-2 bg-success p-2"></div></div>
-                <div class="col"><div class="rounded-2 bg-success p-2"></div></div>
-                <div class="col"><div class="rounded-2 bg-success p-2"></div></div>
-                <div class="col"><div class="rounded-2 bg-success p-2"></div></div>
-              </div>
-            </button>*2
-          </div>*6
-
-          </div> -->
-
-        </div>
-      </div>
-
-      <div class="container col-md">
-        <!-- slots 4-10-->
-        <div class="list-group overflow-auto" id="afternoonSlots" style=" height: 50vh; max-height: 50vh;">
-          <div>Afternoon Time Slots</div>
-          <div id="afternoonLoader">Loading...</div>
-
-          <!-- <div class="d-flex">
-            <button class="list-group-item list-group-item-action d-flex px-2"
-            data-bs-toggle="modal" data-bs-target="#book-workout">
-              <div class="fs-5 align-items-center w-50">4:00PM</div>
-              <div class="bg-success text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">0/4</div>
-            </button>*2
-          </div> -->
-
-
+            <div id="loader">Loading...</div>
 
         </div>
       </div>
@@ -148,7 +96,7 @@
   </div>
 </div>
     <script>
-      let data = {{ calendar|safe }}
+      let data = {{ activity_slots|safe }}
     </script>
 
     <script type="text/javascript" src="{% static 'js/activity.js' %}"></script>

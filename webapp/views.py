@@ -163,7 +163,21 @@ def activity(request, activity):
         user = MyUser.objects.get(email=request.user)
         #condo = user.condo
         #visitor_stalls = VisitorParking.objects.filter(condo=condo)
-        return render(request, 'activity_calendar.html', {'activity_name': activity, 'parking':[1,2,3,4,5,6]})
+        dummy_data = [
+                       [{"id": 0, "label": "stall 1", "hour": 0, "minute": 0, "day": f'{4+day}', "month": 3, "year": 2022,
+                        "count": 0},
+                       {"id": 0, "label": "stall 2", "hour": 6, "minute": 30, "day":f'{4+day}', "month": 3, "year": 2022,
+                        "count": 0},
+                       {"id": 0, "label": "stall 3", "hour": 7, "minute": 0, "day": f'{4+day}', "month": 3, "year": 2022,
+                        "count": 0},
+                       {"id": 0, "label": "stall 4", "hour": 7, "minute": 30, "day":f'{4+day}', "month": 3, "year": 2022,
+                        "count": 0},
+                       {"id": 0, "label": "stall 5", "hour": 8, "minute": 0, "day": f'{4+day}', "month": 3, "year": 2022,
+                        "count": 0}]
+            for day in range(0,7)]
+        dummy_data = sum(dummy_data, [])
+
+        return render(request, 'activity_calendar.html', {'activity_name': activity, 'activity_slots': json.dumps(dummy_data)})
     return render(request, 'calendar.html')
 
 
