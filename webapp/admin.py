@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, AuthenticationForm
 from django.core.exceptions import ValidationError
 
 from webapp.models import *
@@ -13,12 +13,12 @@ class UserCreationForm(forms.ModelForm):
     fields, plus a repeated password."""
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
-    # A custom empty label with string
-    date_of_birth = forms.DateField(widget=forms.SelectDateWidget(empty_label="Nothing"))
+    # # A custom empty label with string
+    # date_of_birth = forms.DateField(widget=forms.SelectDateWidget(empty_label="Nothing"))
 
     class Meta:
         model = MyUser
-        fields = ('email', 'phone_number', 'address')
+        fields = ('email', 'phone_number', 'address', 'date_of_birth')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -35,6 +35,23 @@ class UserCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class CondoCreationForm(forms.ModelForm):
+    """A form for creating new users. Includes all the required
+    fields, plus a repeated password."""
+
+    class Meta:
+        model = Condo
+        fields = ('name', 'address')
+
+
+class PrettyAuthenticationForm(AuthenticationForm):
+
+    class Meta:
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'})
+        }
 
 
 class UserChangeForm(forms.ModelForm):

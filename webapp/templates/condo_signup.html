@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
   <h1>Signup</h1>
-  <form class="site-form" action="{% url 'signup' %}" method="post">
+  <form class="site-form" action="{% url 'condo_signup' %}" method="post">
     {% csrf_token %}
     {{form.as_p}}
     <button class="w-50 btn btn-lg btn-primary" type="submit">Sign Up</button>

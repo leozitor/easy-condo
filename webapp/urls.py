@@ -11,5 +11,8 @@ urlpatterns = [
     path('user_dashboard/<str:activity>', views.activity, name='dashboard_activity'),
     path('add_booking/', views.add_booking, name='add_booking'),
     path('delete_booking/', views.delete_booking, name='delete_booking'),
-    path('calendar_dashboard/', views.calendar_dashboard, name='calendar_dashboard')
+    path('condo_signup/', views.condo_signup, name='condo_signup'),
+    path('gym_session_calendar/', views.gym_session_calendar, name='gym_session_calendar'),
+    path('activity_calendar/', views.activity_calendar, name='activity_calendar'),
+    path('generate_codes/', views.generate_codes, name='generate_codes'),
 ]

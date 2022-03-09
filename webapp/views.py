@@ -2,6 +2,7 @@ from datetime import datetime, timezone, date, timedelta
 from itertools import chain
 import json
 import pandas as pd
+import uuid
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -13,7 +14,7 @@ from django.http import HttpResponse
 
 from webapp.forms import *
 from webapp.models import *
-
+from webapp.admin import *
 
 def prepare_schedule():
     # available schedule -> period [StartHour, EndHour]
@@ -107,21 +108,6 @@ def index(request):
         return redirect('user_login')
 
 
-# @require_http_methods(["POST"])
-# def login(request):
-#     auth_form = AuthenticationForm(request, data=request.POST)
-#     if auth_form.is_valid():
-#         username = auth_form.cleaned_data.get('username')
-#         password = auth_form.cleaned_data.get('password')
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             return render(request, 'user_dashboard.html', context=data)
-#         else:
-#             return render(request, 'error_404.html')
-#     else:
-#         return render(request, 'error_404.html')
-
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -134,20 +120,34 @@ def signup(request):
     return render(request, "signup.html", {'form': form})
 
 
+def condo_signup(request):
+    if request.method == 'POST':
+        form = CondoCreationForm(request.POST)
+        if form.is_valid():
+            condo = form.save()
+            # log the user in
+            return redirect('index')
+    else:
+        form = CondoCreationForm()
+    return render(request, "condo_signup.html", {'form': form})
+
+
 def user_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
-            # log in the user
-            user = form.get_user()
-            login(request, user)
-            if 'next' in request.POST:
-                return redirect(request.POST.get("next"))
-            else:
-                return redirect('index')
+            user = authenticate(username=request.POST['username'], password=request.POST['password'])
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    return redirect('user_dashboard')
+                else:
+                    return redirect('index')
+        else:
+            return redirect('index')
     else:
         form = AuthenticationForm()
-    return render(request, "login.html", {'form': form, 'user_logged': True})
+        return render(request, "login.html", {'form': form})
 
 
 def user_logout(request):
@@ -157,8 +157,9 @@ def user_logout(request):
 
 def activity(request, activity):
     if activity == 'gym':
-        calendar = schedule()
-        return render(request, 'calendar.html', {'activity_name': activity, 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
+        return render(request, 'calendar_dashboard.html',
+                      {'user_schedule': user_schedule(request)})
+
     if activity == 'parking':
         user = MyUser.objects.get(email=request.user)
         #condo = user.condo
@@ -178,7 +179,12 @@ def activity(request, activity):
         dummy_data = sum(dummy_data, [])
 
         return render(request, 'activity_calendar.html', {'activity_name': activity, 'activity_slots': json.dumps(dummy_data)})
+
     return render(request, 'calendar.html')
+
+
+def code_generator(n):
+    return [uuid.uuid1() for i in range(n)]
 
 
 @login_required
@@ -188,12 +194,19 @@ def user_dashboard(request):
 
 
 @login_required
-def calendar_dashboard(request):
-    return render(request, 'calendar_dashboard.html', {'user_schedule': user_schedule(request)})
+def gym_session_calendar(request):
+    calendar = schedule()
+    return render(request, 'calendar.html',
+                  {'activity_name': activity, 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
 
 
 @login_required
-def add_booking(request):  # TODO build this
+def activity_calendar(request):
+    return render(request, 'activity_calendar.html',{'activity_name': activity, 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
+
+
+@login_required
+def add_booking(request):
     dt_str = request.POST['timeStamp']  # datetime string
     dt = datetime.strptime(dt_str, "%m/%d/%Y, %H:%M").replace(tzinfo=timezone.utc)
     user = MyUser.objects.get(email=request.user)
@@ -210,10 +223,23 @@ def add_booking(request):  # TODO build this
 
 
 @login_required
-def delete_booking(request):  # TODO build this
+def delete_booking(request):
     ts_id = request.POST['id']  # training session booking id
-    GymSession.objects.filter(id=ts_id).delete()  # TODO: can be changed only the status instead of removal
+    GymSession.objects.filter(id=ts_id).delete()
     return render(request, 'calendar_dashboard.html', context={'user_schedule': user_schedule(request)})
+
+
+@login_required #TODO: change for staff
+def generate_codes(request):
+    if request.method == 'POST':
+        codes = code_generator(int(request.POST['quantity']))
+        print(str(codes))  # TODO: send remove
+        for code in codes:
+            SignupCode.objects.create(code=code)
+        return render(request, 'code_generator.html', context={'codes': codes})
+    else:
+        return render(request, 'code_generator.html')
+
 
 @login_required
 #  making one temporal view request for coding user dashboard

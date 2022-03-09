@@ -20,6 +20,10 @@ USER_STATUS_TYPE = (
     ('P', 'Penalized'),
     ('I', 'Inactive')
 )
+SIGNUP_TYPE = (
+    ('U', 'Used'),
+    ('A', 'Available')
+)
 
 
 class Condo(models.Model):
@@ -34,7 +38,7 @@ class Condo(models.Model):
 
 
 class MyUserManager(BaseUserManager):
-    def create_user(self, email, date_of_birth, password=None):
+    def create_user(self, email, password=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -43,23 +47,21 @@ class MyUserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         user = self.model(
-            email=self.normalize_email(email),
-            date_of_birth=date_of_birth,
+            email=self.normalize_email(email)
         )
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, date_of_birth, password=None):
+    def create_superuser(self, email, password=None):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
         """
         user = self.create_user(
             email,
-            password=password,
-            date_of_birth=date_of_birth,
+            password=password
         )
         user.is_admin = True
         user.save(using=self._db)
@@ -72,7 +74,7 @@ class MyUser(AbstractBaseUser):
         max_length=255,
         unique=True,
     )
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=11)
@@ -109,10 +111,9 @@ class MyUser(AbstractBaseUser):
 
 
 class SignupCode(models.Model):
-    code = models.CharField(max_length=128)
-    user = models.OneToOneField(MyUser, on_delete=models.CASCADE)
-    condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
-    use_status = models.BooleanField(default=False)
+    code = models.CharField(max_length=36)
+    condo_id = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)  #TODO: change to null=False
+    use_status = models.CharField(max_length=1, choices=SIGNUP_TYPE, default='A')
 
 
 class GymSession(models.Model):

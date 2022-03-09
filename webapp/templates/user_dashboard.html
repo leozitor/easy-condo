@@ -7,7 +7,7 @@
 
 {% endblock %}
 {% block content %}
- <ul id="options">
+ <ul id="options" style="display:inline;">
     {% for option in options %}
         <li><a href="{{ option }}"><button type="button" class="btn btn-secondary m-1">{{option}}</button></a></li>
     {% endfor %}

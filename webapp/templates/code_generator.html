@@ -1,0 +1,51 @@
+{% extends "base_layout.html" %}
+
+{% load static %}
+
+{% block head %}
+
+    <!-- Custom styles for this template -->
+{% endblock %}
+
+{% block content %}
+    <main class="form-signin" style="margin: auto 0;">
+        <form action="{% url 'generate_codes' %}" method="post">
+            {% csrf_token %}
+            <div class="card text-center">
+                <div class="card-header">
+                    <h5 class="card-title">Generate Codes</h5>
+                </div>
+                <div class="card-body">
+                    {% if codes %}
+                        <p class="card-text">Codes Generated</p>
+                        <div class="container m-0">
+                            <!-- slots -->
+                            <div class="container d-flex flex-wrap p-0">
+                                {% for code in codes %}
+                                    <button type="button" class="row ms-0 p-2 border bg-white">
+                                        <div class="col fs-5 align-self-center">
+                                            {{ code }}
+                                        </div>
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="card-text">Generate the Serial Codes for users be Able to register on the app</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted">
+                    <div class="input-group" style="margin-left: auto; margin-right: auto; max-width: 500px">
+                        <input type="number" class="form-control" name="quantity"
+                               placeholder="Number of codes to generate"
+                               aria-label="codes" aria-describedby="button-addon">
+                        <button class="btn btn-outline-secondary" type="submit" id="button-addon">Generate</button>
+                        <button class="btn btn-outline-secondary m-1" type="submit" id="button-addon">Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+{% endblock %}
+

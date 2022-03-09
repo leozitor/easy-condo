@@ -4,40 +4,40 @@
 //create usage to post the booked session
 
 class Activity {
-    constructor(date, quantity, label){
+    constructor(date, quantity, label) {
         this._date = date;
         this._label = label
         this._quantity = quantity;
     }
 
-    get date(){
+    get date() {
         return this._date;
     }
 
-    get label(){
+    get label() {
         return this._label;
     }
 
-    getLabel(){
+    getLabel() {
         return this._label;
     }
 
-    getDateShort(){
+    getDateShort() {
         let day = this._date.getDate();
         let month = this._date.getMonth() + 1;
 
-        if(day < 10){
+        if (day < 10) {
             day = "0" + day;
         }
 
-        if(month < 10){
+        if (month < 10) {
             month = "0" + month;
         }
 
         return day + "/" + month + "/" + this._date.getFullYear().toString().slice(2);
     }
 
-    getDatePythonFormat(){
+    getDatePythonFormat() {
 
         let day = this._date.getDate();
         let month = this._date.getMonth() + 1;
@@ -45,30 +45,30 @@ class Activity {
 
         let m = this._date.getMinutes();
 
-        if(day < 10){
+        if (day < 10) {
             day = "0" + day;
         }
 
-        if(month < 10){
+        if (month < 10) {
             month = "0" + month;
         }
 
-        if(h <10){
-            h = "0"+h;
+        if (h < 10) {
+            h = "0" + h;
         }
-        if(m<10){
-            m = "0"+m;
+        if (m < 10) {
+            m = "0" + m;
         }
 
         return month + "/" + day + "/" + this._date.getFullYear() + ", " + h + ":" + m;
 
     }
 
-    getShortYear(){
+    getShortYear() {
         return this._date.getFullYear().toString().slice(2);
     }
 
-    getTimeString(){
+    getTimeString() {
 
         let h = this._date.getHours();
 
@@ -76,21 +76,21 @@ class Activity {
         let timeAffix;
         let hours;
 
-        if(minutes < 30){
+        if (minutes < 30) {
             minutes = "00";
         }
 
 
-        if(h >= 12){
+        if (h >= 12) {
             timeAffix = "PM";
-        }else{
+        } else {
             timeAffix = "AM";
         }
 
-        if(timeAffix == "AM"){
+        if (timeAffix == "AM") {
             hours = h;
-        }else{
-            hours = h%12;
+        } else {
+            hours = h % 12;
         }
 
         return ("" + hours + ":" + minutes + timeAffix);
@@ -98,44 +98,40 @@ class Activity {
 
     }
 
-    getDateString(){
+    getDateString() {
         let dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         let MonthOfYear = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
 
 
         let day = dayOfWeek[this._date.getDay()];
         let month = MonthOfYear[this._date.getMonth()];
 
 
-        return (day + ", " + month + " " + this._date.getDate() );
+        return (day + ", " + month + " " + this._date.getDate());
     }
 
-    getDayShortFormat(){
+    getDayShortFormat() {
         let dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         let day = dayOfWeek[this._date.getDay()]
         return day;
     }
 
-    get quantity(){
+    get quantity() {
         return this._quantity;
     }
-
 
 
 }
 
 
-
-
 //Module for workouts tab
-const ActivityCalendar  = (()=>{
+const ActivityCalendar = (() => {
     let calendar = [];
 
 
-    let fetchCalendar = () =>{
+    let fetchCalendar = () => {
 
-        try{
+        try {
             //placeholder fetch
             console.log(data);
 
@@ -150,9 +146,9 @@ const ActivityCalendar  = (()=>{
 
 
             let counter = 0;
-            for(i = 0; i < 7; i++){
+            for (i = 0; i < 7; i++) {
                 calendar.push([]);
-                for(j=0; j<data.length/7; j++){
+                for (j = 0; j < data.length / 7; j++) {
                     let d = data[counter];
                     calendar[i].push(new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count, d.label));
                     counter++;
@@ -161,14 +157,11 @@ const ActivityCalendar  = (()=>{
             console.log(calendar);
 
 
-
-
-
             //if nothing is pushed to workouts, don't populate
-            if(calendar.length != 0){
+            if (calendar.length != 0) {
                 console.log("received sessions");
                 //update workouts
-                createActivitySessions(0);
+                _createActivitySessions(0);
                 //populate the footer 7 days buttons
                 _populateFooterButtons();
                 //disable loaders
@@ -178,15 +171,13 @@ const ActivityCalendar  = (()=>{
                 _createFooterItemEventListener();
 
 
-            }else{
+            } else {
                 //if errors or no workouts do something with loaders
                 _changeLoaders(false);
             }
 
 
-
-
-        } catch(err){
+        } catch (err) {
             console.log(err);
             console.log("something went wrong during the fetching of sessions");
             _changeLoaders(false);
@@ -194,18 +185,17 @@ const ActivityCalendar  = (()=>{
         //do the fetching
 
 
-
     }
 
-    let createActivitySessions = (day) =>{
+    let _createActivitySessions = (day) => {
         //day is so we know which day session array we are taking from calendar
         let bookOnDate = document.getElementById("bookOnDate");
         let slots = document.getElementById("slots");
 
-        let newFlexDiv;
-        calendar[day].forEach((ses,i)=>{
+
+        calendar[day].forEach((ses, i) => {
             //set title header
-            if(i == 0){
+            if (i == 0) {
                 bookOnDate.textContent = ses.getDateString();
             }
 
@@ -231,14 +221,16 @@ const ActivityCalendar  = (()=>{
             //
             // </div>
             let button = document.createElement("button");
-            button.classList.add("row","ms-0", "me-2", "p-2", "border","sessionBookingItem", "bg-white");
+            button.classList.add("row", "ms-0", "me-2", "p-2", "border", "sessionBookingItem", "bg-white");
             button.setAttribute("data-bs-toggle", "modal");
             button.setAttribute("data-bs-target", "#book-workout");
+
+            console.log(button)
 
             let firstDiv = document.createElement("div");
             firstDiv.classList.add("col", "fs-5", "align-self-center");
             firstDiv.setAttribute("sDay", ses.date.getDate());
-            firstDiv.setAttribute("sMonth", ses.date.getMonth()+1);
+            firstDiv.setAttribute("sMonth", ses.date.getMonth() + 1);
             firstDiv.setAttribute("sYear", ses.getShortYear());
             firstDiv.setAttribute("sHour", ses.date.getHours());
             firstDiv.setAttribute("sMin", ses.date.getMinutes());
@@ -251,20 +243,16 @@ const ActivityCalendar  = (()=>{
 
             let secondDiv = document.createElement("div");
             secondDiv.classList.add("col", "border", "rounded", "align-self-center");
-            if(ses.quantity ==0){
+            if (ses.quantity === 0) {
                 secondDiv.textContent = "available"
                 secondDiv.classList.add("bg-success", "text-white");
-                //disable modal
-                button.setAttribute("data-bs-toggle", "");
-                button.setAttribute("data-bs-target", "");
-            }
-            else if(ses.quantity >= 1){
+            } else if (ses.quantity >= 1) {
                 secondDiv.textContent = "Full"
                 secondDiv.classList.add("bg-danger", "text-white");
                 //disable modal
                 button.setAttribute("data-bs-toggle", "");
                 button.setAttribute("data-bs-target", "");
-            }else{
+            } else {
                 secondDiv.classList.add("bg-success", "text-white");
             }
 
@@ -277,7 +265,7 @@ const ActivityCalendar  = (()=>{
         _createItemEventListener();
     }
 
-    let _populateFooterButtons = ()=>{
+    let _populateFooterButtons = () => {
         let footerButtonsContainer = document.getElementById("footerButtonsContainer");
 
         //structure
@@ -287,7 +275,7 @@ const ActivityCalendar  = (()=>{
         //     <span id="monAvailability">60%</span>
         //   </button>
         // </div>
-        calendar.forEach((week,index)=>{
+        calendar.forEach((week, index) => {
             let div = document.createElement("div");
             div.classList.add("col");
 
@@ -304,15 +292,15 @@ const ActivityCalendar  = (()=>{
             let counter = 0;
 
 
-            week.forEach(ses=>{
+            week.forEach(ses => {
                 availability += ses.quantity;
                 counter++;
             })
 
 
-            let percentage = (availability / (counter*4))*100;
+            let percentage = (availability / (counter * 4)) * 100;
 
-            span.textContent = parseFloat(percentage).toFixed(2)+"%";
+            span.textContent = parseFloat(percentage).toFixed(2) + "%";
 
             button.setAttribute("weekIndex", index);
             button.append(span);
@@ -322,14 +310,13 @@ const ActivityCalendar  = (()=>{
         })
 
 
-
     }
 
-    let _createFooterItemEventListener=()=>{
+    let _createFooterItemEventListener = () => {
         let buttons = document.querySelectorAll(".footerButton");
 
-        buttons.forEach(b=>{
-            b.addEventListener("click", ()=>{
+        buttons.forEach(b => {
+            b.addEventListener("click", () => {
                 let slots = document.getElementById("slots");
 
                 slots.innerHTML = "";
@@ -339,7 +326,7 @@ const ActivityCalendar  = (()=>{
                 loader.textContent = "Loading..."
                 slots.append(loader);
 
-                createActivitySessions(b.getAttribute("weekIndex"));
+                _createActivitySessions(b.getAttribute("weekIndex"));
 
                 _changeLoaders(true);
             })
@@ -347,25 +334,24 @@ const ActivityCalendar  = (()=>{
         })
 
 
-
     }
 
 
-    let _createItemEventListener = () =>{
+    let _createItemEventListener = () => {
         //get all the upcomingWorkoutList
         let sessionBookingItem = document.querySelectorAll(".sessionBookingItem");
 
         //set event Listeners
         //when user clicks an upcoming workout we
-        sessionBookingItem.forEach((el,index)=>{
-            el.addEventListener("click", (e) =>{
+        sessionBookingItem.forEach((el, index) => {
+            el.addEventListener("click", (e) => {
                 _populateBookingModal(el);
 
             })
         })
     }
 
-    let _populateBookingModal =(el)=>{
+    let _populateBookingModal = (el) => {
         let modalTime = document.getElementById("modalTime");
         let modalDate = document.getElementById("modalShortDate");
         let modalDateString = document.getElementById("modalDateString");
@@ -384,20 +370,18 @@ const ActivityCalendar  = (()=>{
         timeStampPost.setAttribute("value", el.children[0].getAttribute("sDatePythonFormat"));
 
 
-
-
     }
 
 
-    let _changeLoaders = (success)=>{
+    let _changeLoaders = (success) => {
         let loader = document.getElementById("loader");
         let weeksLoader = document.getElementById("weeksLoader");
 
 
-        if(success){
+        if (success) {
             loader.style.display = "none";
             weeksLoader.style.display = "none";
-        }else{
+        } else {
             loader.textContent = "No Activity found!";
             weeksLoader.textContent = "No Schedule found!";
         }
