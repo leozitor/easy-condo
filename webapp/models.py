@@ -5,7 +5,7 @@ from django.contrib.auth.models import (
 
 USER_TYPE = (
     ('RU', 'Resident User'),
-    ('AD', 'Administrator'),
+    ('CA', 'Condo Admin'),
     ('SP', 'Service Provider')
 )
 
@@ -20,17 +20,24 @@ USER_STATUS_TYPE = (
     ('P', 'Penalized'),
     ('I', 'Inactive')
 )
+
 SIGNUP_TYPE = (
     ('U', 'Used'),
     ('A', 'Available')
+)
+
+STALL_TYPE = (
+    ('V', 'VISITOR'),
+    ('R', 'RESIDENT')
 )
 
 
 class Condo(models.Model):
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
     # max_users_gym = models.IntegerField(default=4)
 
     def __str__(self):
@@ -80,15 +87,16 @@ class MyUser(AbstractBaseUser):
     phone_number = models.CharField(max_length=11)
     user_type = models.CharField(max_length=2, choices=USER_TYPE, default='RU')
     user_status = models.CharField(max_length=1, choices=USER_STATUS_TYPE, default='A')
-    address = models.CharField(max_length=100)
-    # condo = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)
+    address = models.CharField(max_length=100, null=True)
+    condo = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = MyUserManager()
 
     USERNAME_FIELD = 'email'
-    #REQUIRED_FIELDS = ['date_of_birth'] #TODO: verify which is important
+
+    # REQUIRED_FIELDS = ['date_of_birth'] #TODO: verify which is important
 
     def __str__(self):
         return self.email
@@ -112,7 +120,7 @@ class MyUser(AbstractBaseUser):
 
 class SignupCode(models.Model):
     code = models.CharField(max_length=36)
-    condo_id = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)  #TODO: change to null=False
+    condo_id = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)  # TODO: change to null=False
     use_status = models.CharField(max_length=1, choices=SIGNUP_TYPE, default='A')
 
 
@@ -140,32 +148,58 @@ class Penalties(models.Model):
         return f'User: {str(self.user)}   Amount: {self.penalty_amount}   Reason: {self.penalty_reason}'
 
 
-class CondoParking(models.Model):
-    stall_number = models.IntegerField()
-    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+class Stall(models.Model):
+    stall_label = models.CharField(max_length=8)
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
+    stall_type = models.CharField(max_length=1, choices=STALL_TYPE, default='V')
 
     def __str__(self):
-        return f'Stall Number: {self.stall_number}   User: {str(self.user)}'
+        return f'Stall: {self.stall_label} Type: {self.stall_type}  on Condo: {str(self.condo)}'
 
 
-class VisitorParking(models.Model):
-    stall_number = models.IntegerField()
-    responsible_user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
-    condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
-    scheduled_date = models.DateField()
-    visitor_name = models.CharField(max_length=64)
-    visitor_phone = models.CharField(max_length=11)
+class StallReservation(models.Model):
+    stall = models.ForeignKey(Stall, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    date = models.DateField()
+
+    # status = models.CharField(max_length=1, choices=STALL_STATUS_TYPE, default='C')
 
     def __str__(self):
-        return f'Stall Number: {self.stall_number}   User: {str(self.responsible_user)}'
+        return f'Stall: {self.stall} Reserved for user {self.user}  checkin on Date: {self.date}'
 
 
 class TennisCourt(models.Model):
     court_number = models.IntegerField()
+    condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
+    time_slot = models.TimeField()
+
+    def __str__(self):
+        return f'Court Number: {self.court_number}, Condo: {str(self.condo.name)}, on time slot: {str(self.time_slot)}'
+
+
+class TennisCourtReservation(models.Model):
+    court = models.ForeignKey(TennisCourt, on_delete=models.CASCADE)
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    use_time = models.DateTimeField()  #TODO talvez eu só precise da  data
+
+    # status = models.CharField(max_length=1, choices=STALL_STATUS_TYPE, default='C')
+
+    def __str__(self):
+        return f'Court: {self.court} Reserved for user {self.user}  on Time : {self.use_time}'
+
+
+class PartyRoom(models.Model):
+    room_name = models.CharField(max_length=16)
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Court Number: {self.court_number}   User: {str(self.user)}'
+        return f'Room Name: {self.room_name}   Condo: {str(self.condo.name)}'
 
+
+class PartyRoomReservation(models.Model):
+    party_room = models.ForeignKey(PartyRoom, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    day_of_use = models.DateField()
+
+    def __str__(self):
+        return f'Party Room: {self.party_room} Reserved for user {self.user}  on Date: {self.day_of_use}'

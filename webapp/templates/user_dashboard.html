@@ -2,15 +2,42 @@
 {% load static %}
 {% block head %}
     <title>GMS - User Dashboard</title>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        .activityBtn {
+            width: 100%;
+            border-radius: 10px;
+            background-color: #727681;
+        }
 
-    <!-- Custom styles for this template -->
+        h4 {
+            text-align: center;
+            margin: 0;
+        }
+
+        .material-icons.md-48 { font-size: 50px; }
+    </style>
 
 {% endblock %}
 {% block content %}
- <ul id="options" style="display:inline;">
-    {% for option in options %}
-        <li><a href="{{ option }}"><button type="button" class="btn btn-secondary m-1">{{option}}</button></a></li>
-    {% endfor %}
- </ul>
+
+    <h1 class="text-secondary display-2 mb-5">Main Menu</h1>
+    <div class="container">
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-lg-3 g-2 g-lg-3">
+            {% for option in options %}
+                <div class="col">
+                    <a href="{{ option.name }}">
+                        <button type="button" class="btn btn-secondary p-3 activityBtn">
+                            <span class="material-icons md-48">{{ option.icon }}</span>
+                            <h4> {{ option.name }}</h4>
+                        </button>
+
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 
 {% endblock %}

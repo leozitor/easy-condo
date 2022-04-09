@@ -84,10 +84,11 @@
             id:3456789
         </div> -->
       </div>
-      <form action="/add_booking/" method="post">
+      <form action="/add_booking_activity/{{ activity_name }}" method="post">
         {% csrf_token %}
         <div class="modal-footer">
           <input type="hidden" id="timeStampPost" value="" name="timeStamp">
+            <input type="hidden" id="activityId" value="" name="activityId">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-success">Confirm</button>
         </div>

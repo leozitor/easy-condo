@@ -4,10 +4,13 @@
 //create usage to post the booked session
 
 class Activity {
-    constructor(date, quantity, label) {
+    constructor(date, quantity, label, id, type, qtlimit) {
         this._date = date;
         this._label = label
         this._quantity = quantity;
+        this._id = id;
+        this._type= type;
+        this._qtlimit = qtlimit;
     }
 
     get date() {
@@ -62,6 +65,16 @@ class Activity {
 
         return month + "/" + day + "/" + this._date.getFullYear() + ", " + h + ":" + m;
 
+    }
+
+    getId() {
+        return this._id;
+    }
+    getType() {
+        return this._type;
+    }
+    getQtlimit() {
+        return this._qtlimit;
     }
 
     getShortYear() {
@@ -150,7 +163,7 @@ const ActivityCalendar = (() => {
                 calendar.push([]);
                 for (j = 0; j < data.length / 7; j++) {
                     let d = data[counter];
-                    calendar[i].push(new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count, d.label));
+                    calendar[i].push(new Activity(new Date(d.year, d.month - 1, d.day, d.hour, d.minute), d.count, d.label, d.id, d.type, d.qtlimit));
                     counter++;
                 }
             }
@@ -237,6 +250,7 @@ const ActivityCalendar = (() => {
             firstDiv.setAttribute("sDateShort", ses.getDateShort());
             firstDiv.setAttribute("sDateString", ses.getDateString());
             firstDiv.setAttribute("sDatePythonFormat", ses.getDatePythonFormat());
+            firstDiv.setAttribute("activityId", ses.getId())
             firstDiv.textContent = ses.getLabel();
 
             button.append(firstDiv);
@@ -297,8 +311,9 @@ const ActivityCalendar = (() => {
                 counter++;
             })
 
+            let quantity_limit = week[0].getQtlimit();
 
-            let percentage = (availability / (counter * 4)) * 100;
+            let percentage = (availability / (counter * quantity_limit)) * 100;
 
             span.textContent = parseFloat(percentage).toFixed(2) + "%";
 
@@ -356,6 +371,7 @@ const ActivityCalendar = (() => {
         let modalDate = document.getElementById("modalShortDate");
         let modalDateString = document.getElementById("modalDateString");
         let timeStampPost = document.getElementById("timeStampPost");
+        let activityId = document.getElementById("activityId")
 
         //structure of element
         // <button class="list-group-item list-group-item-action d-flex px-2 sessionBookingItem"
@@ -368,6 +384,7 @@ const ActivityCalendar = (() => {
         modalDate.textContent = el.children[0].getAttribute("sDateShort");
         modalDateString.textContent = el.children[0].getAttribute("sDateString");
         timeStampPost.setAttribute("value", el.children[0].getAttribute("sDatePythonFormat"));
+        activityId.setAttribute("value", el.children[0].getAttribute("activityId"))
 
 
     }

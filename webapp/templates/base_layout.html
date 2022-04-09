@@ -1,67 +1,100 @@
 <!doctype html>
 {% load static %}
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Easy Condo Management System">
     <meta name="author" content="Leozitor">
     <meta name="generator" content="Hugo 0.84.0">
-
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <!-- bootstrap icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons"
+          rel="stylesheet">
     <title> Easy Condo - Management System</title>
-
     {% block head %}
     {% endblock %}
+
 </head>
-<body class="bg-light d-flex flex-column justify-content-between pt-0" style="min-height:100vh;">
+<body class="d-flex flex-column h-100">
+<div class="container">
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between justify-content-lg-start py-3 mb-4 border-bottom">
 
-<!--we can comment it out if needed-->
-<nav class="navbar navbar-expand-md bg-primary navbar-dark py-1 w-100">
-    <div class="container">
-
-        <a class="navbar-brand" href="{% url 'index' %}">
-            <img src="{% static 'images/easycondo-logo.jpg' %}" alt="" height="34" class="d-inline-block align-text-top">
-            Easy Condo
+        <a href="{% url 'user_dashboard' %}" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+            <img src="{% static 'images/easycondo-logo.png' %}" alt class="d-inline-block  me-2"
+                 style="max-width: 64px; background-color:white">
         </a>
 
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0 me-lg-auto">
+            <li><a href="{% url 'user_dashboard' %}"
+                   class="nav-link px-2 link-secondary">Easy Condo</a></li>
+{#            <li><a href="#" class="nav-link px-2 link-dark">Features</a></li>#}
+{#            <li><a href="#" class="nav-link px-2 link-dark">Pricing</a></li>#}
+{#            <li><a href="#" class="nav-link px-2 link-dark">FAQs</a></li>#}
+{#            <li><a href="#" class="nav-link px-2 link-dark">About</a></li>#}
+        </ul>
         {% if user.is_authenticated %}
-            <div class="collapse navbar-collapse" id="navmenu">
-                <!-- ms-auto is so it aligns to the right-->
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a href="{% url 'user_dashboard' %}" class="nav-link">Dashboard</a>
-                    </li>
-<!--                    <li class="nav-item">-->
-<!--                        <a href=" url 'calendar'" class="nav-link">Book a Training</a>-->
-<!--                    </li>-->
-                    <li class="nav-item">
-                        <a href="{% url 'user_logout' %}" class="nav-link" onmouseover="this.style.backgroundColor='#b9000f'" onmouseout="this.style.backgroundColor=''">Log Out</a>
-                    </li>
-                </ul>
+            <div class="text-end">
+                {% if request.user.is_staff %}
+                    <button type="button" class="btn btn-outline-dark"
+                            onclick="location.href='{% url 'admin_dashboard' %}'">Admin
+                    </button>
+                {% endif %}
+                <button type="button" class="btn btn-outline-primary mx-2"
+                        onclick="location.href='{% url 'user_dashboard' %}'">Dashboard
+                </button>
+                <button type="button" class="btn btn-outline-danger"
+                        onclick="location.href='{% url 'user_logout' %}'">Log Out
+                </button>
             </div>
         {% endif %}
+    </header>
+</div>
+<!-- Alert Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" id="alertModalDialog">
+        <div class="modal-content">
+            <div class="alert {{ alert_msg.type }} d-flex justify-content-between mb-0" role="alert">
+                <i class="{{ alert_msg.icon }}"></i>
+                <div>
+                    {{ alert_msg.message }}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
-</nav>
-<main class="container flex-grow-1 py-3">
-{% block content %}
-{% endblock %}
+</div>
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
 </main>
 
-<footer class="footer mb-3 text-muted w-100 text-small d-flex justify-content-center">
-    <p class="mb-1 float-start">&copy; 2022 Easy condo</p>
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container d-flex justify-content-center">
+        <span class="text-muted">&copy; 2022 Easy condo - all rights reserved.</span>
+    </div>
 </footer>
 <!-- Option 1: Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
+<script>
+    // for modal alert
+    var alertModal = new bootstrap.Modal(document.getElementById('alertModal'), {
+        keyboard: false
+    })
+    {%  if alert_msg %}
+        alertModal.toggle();
+    {% endif %}
+</script>
+
+
 </body>
 </html>

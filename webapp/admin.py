@@ -8,11 +8,16 @@ from django.core.exceptions import ValidationError
 from webapp.models import *
 
 
+class GenerateCodeForm(forms.Form):
+    codes_qt = forms.IntegerField(label='Quantidade de códigos', min_value=1, max_value=100)
+
+
 class UserCreationForm(forms.ModelForm):
     """A form for creating new users. Includes all the required
     fields, plus a repeated password."""
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
+
     # # A custom empty label with string
     # date_of_birth = forms.DateField(widget=forms.SelectDateWidget(empty_label="Nothing"))
 
@@ -47,7 +52,6 @@ class CondoCreationForm(forms.ModelForm):
 
 
 class PrettyAuthenticationForm(AuthenticationForm):
-
     class Meta:
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control'})
@@ -74,11 +78,11 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('email', 'date_of_birth', 'is_admin')
+    list_display = ('email', 'date_of_birth', 'is_admin', 'condo')
     list_filter = ('is_admin',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('date_of_birth',)}),
+        ('Personal info', {'fields': ('date_of_birth','condo')}),
         ('Permissions', {'fields': ('is_admin',)}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
@@ -97,16 +101,47 @@ class UserAdmin(BaseUserAdmin):
 class GymSessionAdmin(admin.ModelAdmin):
     list_display = ('id', 'checkin_code', 'session_datetime', 'booked_user', 'booking_status')
 
-
     def get_user(self, obj):
         return obj.booked_user.user.username
 
     get_user.short_description = 'username'
     get_user.admin_order_field = 'user__username'
 
+
+class StallAdmin(admin.ModelAdmin):
+    list_display = ('id', 'stall_label', 'condo', 'stall_type')
+
+
+class StallReservationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'stall', 'user', 'date')
+
+
+class TennisCourtAdmin(admin.ModelAdmin):
+    list_display = ('id', 'court_number', 'condo', 'time_slot')
+
+
+class TennisCourtReservationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'court', 'user', 'use_time')
+
+
+class PartyRoomAdmin(admin.ModelAdmin):
+    list_display = ('id', 'room_name', 'condo')
+
+
+class PartyRoomReservationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'party_room', 'user', 'day_of_use')
+
+
 # Now register the new UserAdmin...
 admin.site.register(MyUser, UserAdmin)
 admin.site.register(GymSession, GymSessionAdmin)
+admin.site.register(Stall, StallAdmin)
+admin.site.register(StallReservation, StallReservationAdmin)
+admin.site.register(TennisCourt, TennisCourtAdmin)
+admin.site.register(TennisCourtReservation, TennisCourtReservationAdmin)
+admin.site.register(PartyRoom, PartyRoomAdmin)
+admin.site.register(PartyRoomReservation, PartyRoomReservationAdmin)
+
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
 admin.site.unregister(Group)

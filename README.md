@@ -17,6 +17,9 @@ Condominium Management System - CSIS Project
   * make migrations of Project `python manage.py makemigrations`
   * make migrations of the app `python manage.py makemigrations webapp`
   * migrate `python manage.py migrate`
+### Importing Data to DB
+   `python manage.py  loaddata db-import.json`
+
 
 ### Creating super user
 
