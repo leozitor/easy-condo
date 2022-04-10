@@ -233,15 +233,17 @@ const ActivityCalendar = (() => {
             //
             //
             // </div>
+            let activityLabel = "" // for custom labels given activity
+            let btnDiv = document.createElement("div")
+            btnDiv.classList.add("col", "d-flex", "justify-content-center")
             let button = document.createElement("button");
-            button.classList.add("row", "ms-0", "me-2", "p-2", "border", "sessionBookingItem", "bg-white");
+            button.classList.add("row", "p-2", "border", "sessionBookingItem", "bg-white");
             button.setAttribute("data-bs-toggle", "modal");
             button.setAttribute("data-bs-target", "#book-workout");
 
-            console.log(button)
 
             let firstDiv = document.createElement("div");
-            firstDiv.classList.add("col", "fs-5", "align-self-center");
+            firstDiv.classList.add("col", "fs-5", "align-self-center", "text-nowrap");
             firstDiv.setAttribute("sDay", ses.date.getDate());
             firstDiv.setAttribute("sMonth", ses.date.getMonth() + 1);
             firstDiv.setAttribute("sYear", ses.getShortYear());
@@ -251,14 +253,25 @@ const ActivityCalendar = (() => {
             firstDiv.setAttribute("sDateString", ses.getDateString());
             firstDiv.setAttribute("sDatePythonFormat", ses.getDatePythonFormat());
             firstDiv.setAttribute("activityId", ses.getId())
-            firstDiv.textContent = ses.getLabel();
+            console.log("o tipo é: " + ses.getType())
+            if (ses.getType() === "parking") {
+                 activityLabel = "Stall " + ses.getLabel()
+            } else if (ses.getType() === "tennis") {
+                activityLabel = "Court " + ses.getLabel()
+            } else if (ses.getType() === "party") {
+                // activityLabel = "Room " + ses.getLabel()
+                activityLabel = ses.getLabel()
+            } else {
+                firstDiv.textContent = ses.getLabel()
+            }
+            firstDiv.textContent = activityLabel
 
             button.append(firstDiv);
 
             let secondDiv = document.createElement("div");
             secondDiv.classList.add("col", "border", "rounded", "align-self-center");
             if (ses.quantity === 0) {
-                secondDiv.textContent = "available"
+                secondDiv.textContent = "Available"
                 secondDiv.classList.add("bg-success", "text-white");
             } else if (ses.quantity >= 1) {
                 secondDiv.textContent = "Full"
@@ -272,7 +285,8 @@ const ActivityCalendar = (() => {
 
             button.append(secondDiv);
             //end of div or start of div
-            slots.append(button);
+            btnDiv.append(button);
+            slots.append(btnDiv);
         })
 
         //create new Item Event Listeners
@@ -291,16 +305,20 @@ const ActivityCalendar = (() => {
         // </div>
         calendar.forEach((week, index) => {
             let div = document.createElement("div");
-            div.classList.add("col");
+            div.classList.add("col", "p-0");
 
             let day = week[0].getDayShortFormat();
 
+            let p = document.createElement("p");
+            p.classList.add("mb-0");
+            p.innerText = day
             let button = document.createElement("button");
-            button.classList.add("btn", "btn-primary", "fs-5", "fw-bold", "text-center", "footerButton");
-            button.textContent = day;
-            button.append(document.createElement("br"));
+            button.classList.add("btn", "btn-outline-primary", "fs-6", "text-center", "footerButton", "fw-light");
+
+            button.append(p)
 
             let span = document.createElement("span");
+
 
             let availability = 0;
             let counter = 0;
@@ -336,10 +354,10 @@ const ActivityCalendar = (() => {
 
                 slots.innerHTML = "";
 
-                let loader = document.createElement("div");
-                loader.setAttribute("id", "loader");
-                loader.textContent = "Loading..."
-                slots.append(loader);
+                // let loader = document.createElement("div");
+                // loader.setAttribute("id", "loader");
+                // loader.textContent = "Loading..."
+                // slots.append(loader);
 
                 _createActivitySessions(b.getAttribute("weekIndex"));
 
@@ -396,9 +414,11 @@ const ActivityCalendar = (() => {
 
 
         if (success) {
+            console.log("success loading activity calendar")
             loader.style.display = "none";
             weeksLoader.style.display = "none";
         } else {
+            console.log("fail loading activity calendar")
             loader.textContent = "No Activity found!";
             weeksLoader.textContent = "No Schedule found!";
         }

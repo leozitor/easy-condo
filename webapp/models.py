@@ -31,6 +31,12 @@ STALL_TYPE = (
     ('R', 'RESIDENT')
 )
 
+GENDER = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+    ('N', 'Not Applicable')
+)
+
 
 class Condo(models.Model):
     name = models.CharField(max_length=100)
@@ -91,6 +97,9 @@ class MyUser(AbstractBaseUser):
     condo = models.ForeignKey(Condo, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    first_name = models.CharField(max_length=100, null=True)
+    last_name = models.CharField(max_length=100, null=True)
+    gender = models.CharField(max_length=1, choices=GENDER)
 
     objects = MyUserManager()
 
@@ -180,12 +189,12 @@ class TennisCourt(models.Model):
 class TennisCourtReservation(models.Model):
     court = models.ForeignKey(TennisCourt, on_delete=models.CASCADE)
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
-    use_time = models.DateTimeField()  #TODO talvez eu só precise da  data
+    date = models.DateTimeField()  #TODO talvez eu só precise da  data do TennisCourt
 
     # status = models.CharField(max_length=1, choices=STALL_STATUS_TYPE, default='C')
 
     def __str__(self):
-        return f'Court: {self.court} Reserved for user {self.user}  on Time : {self.use_time}'
+        return f'Court: {self.court} Reserved for user {self.user}  on Time : {self.date}'
 
 
 class PartyRoom(models.Model):
@@ -199,7 +208,7 @@ class PartyRoom(models.Model):
 class PartyRoomReservation(models.Model):
     party_room = models.ForeignKey(PartyRoom, on_delete=models.CASCADE)
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
-    day_of_use = models.DateField()
+    date = models.DateField()
 
     def __str__(self):
-        return f'Party Room: {self.party_room} Reserved for user {self.user}  on Date: {self.day_of_use}'
+        return f'Party Room: {self.party_room} Reserved for user {self.user}  on Date: {self.date}'

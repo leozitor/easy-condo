@@ -3,46 +3,60 @@
 {% load static %}
 
 {% block head %}
-<!-- Custom styles for this template -->
-<link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="form-signin">
+
+    {#    <form class="form-signin">#}
+    {#      <img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">#}
+    {#      <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>#}
+    {#      <label for="inputEmail" class="sr-only">Email address</label>#}
+    {#      <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required="" autofocus="">#}
+    {#      <label for="inputPassword" class="sr-only">Password</label>#}
+    {#      <input type="password" id="inputPassword" class="form-control" placeholder="Password" required="">#}
+    {#      <div class="checkbox mb-3">#}
+    {#        <label>#}
+    {#          <input type="checkbox" value="remember-me"> Remember me#}
+    {#        </label>#}
+    {#      </div>#}
+    {#      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>#}
+    {#      <p class="mt-5 mb-3 text-muted">© 2017-2018</p>#}
+    {#    </form>#}
+    <main class="form-signin">
 
 
-    <form class="site-form" action="{% url 'user_login' %}" method="post">
-        {% csrf_token %}
-        <img class="mb-4" src="{% static 'images/easycondo-logo.jpg' %}" alt="damha III">
-        <h1 class="h3 mb-3 fw-normal" style="text-align: center">Please sign in</h1>
-        {{ form.as_p }}
-        <div class="form-floating">
-            <!--username-->
-        </div>
-        <div class="form-floating">
-            <!--password-->
-        </div>
+        <form class="site-form" action="{% url 'user_login' %}" method="post">
+            {% csrf_token %}
+            <img class="mb-1" src="{% static 'images/easycondo-logo.png' %}" alt="Easy Condo">
+            <h1 class="display-3 mb-4 text-center text-nowrap">Easy Condo</h1>
+            <h1 class="h3 mb-3 fw-light text-center">Please sign in</h1>
+            {{ form.username }}
+            {{ form.password }}
 
-        <div class="checkbox mb-2">
-            <label>
-                <input type="checkbox" value="remember-me"> Remember me
-            </label>
-        </div>
-        <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Sign in</button>
-    </form>
+            <div class="checkbox mb-2 text-center">
+                <label>
+                    <input type="checkbox" value="remember-me"> Remember me
+                </label>
+            </div>
+            <button class="w-100 btn btn btn-outline-primary mb-3" type="submit">Sign in</button>
+            <div class="container">
+                <div class="d-flex justify-content-center mb-2">
+                    <a href="{% url 'password_reset' %}">Forgot your password ?</a>
+                </div>
+                <div class="d-flex justify-content-center mb-1 links">
+                    Don't have an account?&nbsp <a href="{% url 'signup' %}">Sign Up</a>
+                </div>
+{#                <div class="d-flex justify-content-center mb-1 links">#}
+{#                    Are you a condo?&nbsp;<a href="{% url 'condo_signup' %}">Join Us</a>#}
+{#                </div>#}
 
-    <div class="container">
-        <div class="d-flex justify-content-center mb-1 links">
-            Don't have an account?&nbsp <a href="{% url 'signup' %}">Sign Up</a>
-        </div>
-            <div class="d-flex justify-content-center mb-1 links">
-            Are you a condo?&nbsp;<a href="{% url 'condo_signup' %}">Join Us</a>
-        </div>
-        <div class="d-flex justify-content-center">
-            <a href="{% url 'password_reset'%}">Forgot your password ?</a>
-        </div>
-    </div>
+            </div>
+        </form>
 
-</main>
+
+        <script src="{% static 'js/login.js' %}"></script>
+    </main>
 {% endblock %}
 

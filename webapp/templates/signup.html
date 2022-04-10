@@ -1,10 +1,82 @@
 {% extends 'base_layout.html' %}
 {% load static %}
+
+{% block head %}
+    <!-- Custom styles for this template -->
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        .container {
+            max-width: 960px;
+        }
+    </style>
+{% endblock %}
 {% block content %}
-  <h1>Signup</h1>
-  <form class="site-form" action="{% url 'signup' %}" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <button class="w-50 btn btn-lg btn-primary" type="submit">Sign Up</button>
-  </form>
+    <form class="site-form" action="{% url 'signup' %}" method="post">
+        {{ form.csrf_token }}
+        <div class="container w-75">
+            <div class="py-3 text-center">
+                <img class="d-block mx-auto mb-4" src="{% static 'images/easycondo-logo.png' %}" alt="" width="160">
+                <h2 class="display-4">Sign up</h2>
+            </div>
+
+            <div class="row g-5">
+                <div class="col-md-7 col-lg-12">
+                        <div class="row g-3">
+                            {% csrf_token %}
+                            {{code_form.as_p}}
+                            {{ form.as_p }}
+                        </div>
+
+                    <button class="w-100 btn btn-outline-primary btn-lg px-5 mt-4 " type="submit">Sign Up</button>
+
+                </div>
+            </div>
+        </div>
+    </form>
+    <script>
+        let labels = document.querySelectorAll("p label")
+        let inputs = document.querySelectorAll("p input")
+        let ps = document.querySelectorAll("p")
+        let error = document.querySelector(".errorlist").style.display = "none"
+        let code = document.querySelector("#id_code")
+        document.querySelector("#id_email").placeholder = "you@example.com"
+        document.querySelector("#id_address").placeholder = "124 Main St APT #123"
+        document.querySelector("#id_phone_number").placeholder = "(604) 555-1234"
+        document.querySelector("#id_date_of_birth").placeholder = "04/01/1990"
+        code.placeholder = "Enter Your Serial Invite Code"
+        code.parentNode.children[0].innerHTML = "Invitation Code"
+        for (let label of labels)
+            label.classList.add("form-label")
+
+        for (let input of inputs)
+            input.classList.add("form-control")
+
+
+        for(let p of ps) {
+            let div = document.createElement('div')
+            div.classList.add("col-sm-6")
+            div.innerHTML = p.innerHTML
+            p.parentNode.replaceChild(div, p)
+        }
+        let sel = document.querySelector("#id_gender")
+        sel.classList.add("form-select")
+        console.log(sel)
+
+
+
+
+    </script>
 {% endblock %}

@@ -9,7 +9,11 @@ from webapp.models import *
 
 
 class GenerateCodeForm(forms.Form):
-    codes_qt = forms.IntegerField(label='Quantidade de códigos', min_value=1, max_value=100)
+    codes_qt = forms.IntegerField(label='Codes Quantity', min_value=1, max_value=1000)
+
+
+class CodeForm(forms.Form):
+    code = forms.CharField(max_length=36)
 
 
 class UserCreationForm(forms.ModelForm):
@@ -23,7 +27,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('email', 'phone_number', 'address', 'date_of_birth')
+        fields = ('first_name', 'last_name', 'email', 'phone_number', 'address', 'date_of_birth', 'gender')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -82,7 +86,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_admin',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('date_of_birth','condo')}),
+        ('Personal info', {'fields': ('date_of_birth', 'condo')}),
         ('Permissions', {'fields': ('is_admin',)}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
@@ -121,7 +125,7 @@ class TennisCourtAdmin(admin.ModelAdmin):
 
 
 class TennisCourtReservationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'court', 'user', 'use_time')
+    list_display = ('id', 'court', 'user', 'date')
 
 
 class PartyRoomAdmin(admin.ModelAdmin):
@@ -129,7 +133,7 @@ class PartyRoomAdmin(admin.ModelAdmin):
 
 
 class PartyRoomReservationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'party_room', 'user', 'day_of_use')
+    list_display = ('id', 'party_room', 'user', 'date')
 
 
 # Now register the new UserAdmin...

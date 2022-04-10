@@ -1,103 +1,115 @@
 {% extends "base_layout.html" %} {% load static %} {% block head %}
-<title>GMS - User Dashboard</title>
+    <title>GMS - User Dashboard</title>
 
-<!-- Custom styles for this template -->
-<link rel="stylesheet" href="{% static 'css/calendar.css' %}" />
+    <!-- Custom styles for this template -->
+{#    <link rel="stylesheet" href="{% static 'css/calendar.css' %}"/>#}
 
 {% endblock %}
 {% block content %}
 
-<main style="margin: auto 0" id="mainDiv">
-  <div class="container-sm border border-1 p-2 py-3 rounded shadow" >
-    <!-- Today's callout -->
-    <div class="container p-3 rounded bg-success bg-gradient text-white d-flex align-items-center">
-      <p class="m-0 flex-fill text-center fw-bold">
-        <span ><i class="bi bi-calendar-check"></i></span>
-        Book on <span id="bookOnDate">Monday, August 25th</span></p>
-    </div>
 
-    <!-- Calendar for today -->
-    <!-- 6-12 16-22 or 6-12  4-10, let's do two columns, half an hour spots, 4 per spot-->
-    <!-- 6 hours morning turn, 12 divs, 6 hours afternoon shift, 12 divs -->
-    <div class="container row m-0 mb-2">
-      <!-- Morning slots container -->
-      <div>Activity Slots</div>
-      <div class="container m-0">
-        <!-- slots -->
-        <div class="container d-flex flex-wrap p-0" id="slots">
+    <main style="margin: auto 0" id="mainDiv" class="rounded shadow border border-1">
+        <div class="card text-center">
+            <div class="card-header">
+                <div class="container p-3 rounded bg-success bg-gradient text-white d-flex justify-content-center align-items-center">
 
-<!--            <button class="list-group-item border list-group-item-action d-flex px-2 sessionBookingItem col-2" data-bs-toggle="modal" data-bs-target="#book-workout"><div class="fs-5 align-items-center w-50" sday="2" smonth="3" syear="22" shour="6" smin="0" sdateshort="02/03/22" sdatestring="Wednesday, March 2" sdatepythonformat="03/02/2022, 06:00">6:00AM</div><div class="border rounded row flex-grow-1 mx-2 align-items-center justify-content-center bg-success text-white">0/4</div></button>-->
+                    <span class="mx-2"><i class="bi bi-calendar-check"></i></span>
+                    <p class="m-0 text-center fs-4">Book on <span id="bookOnDate">Monday, August 25th</span></p>
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title fs-3 fw-light text-capitalize">{{ activity_name }} Slots</h5>
+                {#    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>#}
+                {#    <a href="#" class="btn btn-primary">Go somewhere</a>#}
+{#                <div class="container d-flex flex-wrap p-0" id="slots">#}
+{##}
+{#                    <!--            <button class="list-group-item border list-group-item-action d-flex px-2 sessionBookingItem col-2" data-bs-toggle="modal" data-bs-target="#book-workout"><div class="fs-5 align-items-center w-50" sday="2" smonth="3" syear="22" shour="6" smin="0" sdateshort="02/03/22" sdatestring="Wednesday, March 2" sdatepythonformat="03/02/2022, 06:00">6:00AM</div><div class="border rounded row flex-grow-1 mx-2 align-items-center justify-content-center bg-success text-white">0/4</div></button>-->#}
+{##}
+{#                    <div id="loader">Loading...</div>#}
+{##}
+{#                </div>#}
+                <div id="loader">Loading...</div>
+                <div class="container" >
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2 g-lg-3" id="slots">
 
-            <div id="loader">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <div class="container fs-4 mb-2 fw-light">This week availability <span id="weeksLoader">Loading...</span></div>
+                <div class="container p-0 mb-2">
+                    <div class="row row-cols-7 g-2 g-lg-3 " id="footerButtonsContainer">
+                        {#                        <div class="col">#}
+                        {#                            <a href="#" class="btn btn-primary">Go somewhere</a>#}
+                        {#                        </div>#}
 
+                    </div>
+                </div>
+                {#                <div class="container row justify-content-around text-center g-2" id="">#}
+                {#                    <div class="col">#}
+                {#                        <button class="btn btn-primary fs-5 fw-bold text-center footerButton" weekindex="0">#}
+                {#                            Fri<br><span>0.00%</span></button>#}
+                {#                    </div>#}
+                {#                    <div class="col">#}
+                {#                        <button class="btn btn-primary fs-5 fw-bold text-center footerButton" weekindex="1">#}
+                {#                            Fri<br><span>0.00%</span></button>#}
+                {#                    </div>#}
+                {#                    <div class="col">#}
+                {#                        <button class="btn btn-primary fs-5 fw-bold text-center footerButton" weekindex="2">#}
+                {#                            Fri<br><span>0.00%</span></button>#}
+                {#                    </div>#}
+                {#                </div>#}
+
+            </div>
         </div>
-      </div>
-
-    </div>
 
 
-
-    <!-- weeks abailability, basically works as a tabbed nav that changes divs on upper div-->
-    <div class="container">
-      <div class="container fs-5 fw-bold mb-2">This week's day availability: <span id="weeksLoader">Loading...</span></div>
+    </main>
 
 
-      <div class="container row justify-content-around text-center g-2" id="footerButtonsContainer">
+    <!-- Modal -->
+    <div class="modal fade" id="book-workout" tabindex="-1" aria-labelledby="book-workoutLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="book-workoutLabel">Book Workout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container p-3 rounded bg-warning bg-gradient d-flex align-items-center">
+                        <!-- button to book workout-->
 
-        <!-- <div class="col">
-          <button class="btn btn-primary fs-5 fw-bold text-center footerButton">
-            Mon<br>
-            <span id="monAvailability">60%</span>
-          </button>
-        </div> -->
-
-      </div>
-    </div>
-  </div>
-
-
-</main>
-
-
-<!-- Modal -->
-<div class="modal fade" id="book-workout" tabindex="-1" aria-labelledby="book-workoutLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="book-workoutLabel">Book Workout</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="container p-3 rounded bg-warning bg-gradient d-flex align-items-center">
-          <!-- button to book workout-->
-
-          <p class="m-0 flex-fill text-center fs-3 ">Confirm Your Booking?
-            <br>
-            <span id="modalDateString"></span>
-          </p>
+                        <p class="m-0 flex-fill text-center fs-3 ">Confirm Your Booking?
+                            <br>
+                            <span id="modalDateString"></span>
+                        </p>
+                    </div>
+                    <div class="container d-flex align-items-center py-3 text-center">
+                        <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2"
+                             id="modalTime">10:00AM
+                        </div>
+                        <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2"
+                             id="modalShortDate">25/08/21
+                        </div>
+                    </div>
+                    <!-- <div class="container">
+                        id:3456789
+                    </div> -->
+                </div>
+                <form action="/add_booking_activity/{{ activity_name }}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-footer">
+                        <input type="hidden" id="timeStampPost" value="" name="timeStamp">
+                        <input type="hidden" id="activityId" value="" name="activityId">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Confirm</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="container d-flex align-items-center py-3 text-center">
-            <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="modalTime">10:00AM</div>
-            <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2" id="modalShortDate">25/08/21</div>
-        </div>
-        <!-- <div class="container">
-            id:3456789
-        </div> -->
-      </div>
-      <form action="/add_booking_activity/{{ activity_name }}" method="post">
-        {% csrf_token %}
-        <div class="modal-footer">
-          <input type="hidden" id="timeStampPost" value="" name="timeStamp">
-            <input type="hidden" id="activityId" value="" name="activityId">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-success">Confirm</button>
-        </div>
-      </form>
     </div>
-  </div>
-</div>
     <script>
-      let data = {{ activity_slots|safe }}
+        let data = {{ activity_slots|safe }}
     </script>
 
     <script type="text/javascript" src="{% static 'js/activity.js' %}"></script>

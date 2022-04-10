@@ -7,24 +7,17 @@ import uuid
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import AuthenticationForm
 from .admin import UserCreationForm
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 from webapp.forms import *
 from webapp.models import *
 from webapp.admin import *
+from webapp.constants import *
 
-messages = {'sucess_account': {'icon': 'bi bi-check-circle-fill', 'type': 'alert-success',
-                               'message': 'Account created successfully.'},
-            'sucess_login': {'icon': 'bi bi-check-circle-fill', 'type': 'alert-success',
-                             'message': 'Login successful.'},
-            'error_email': {'icon': 'bi bi-bookmark-x-fill', 'type': 'alert-danger',
-                            'message': 'E-mail already registered'},
-            'invalid_email': {'icon': 'bi bi-bookmark-x-fill', 'type': 'alert-danger', 'message': 'Invalid Email !'},
-            'error_password': {'icon': 'bi bi-bookmark-x-fill', 'type': 'alert-danger', 'message': 'Wrong password!'},
-            }
 
 
 def prepare_schedule():
@@ -69,9 +62,21 @@ def add_pd_datetime(df):
 
 
 def split_time(df, col):
-    df['hour'] = df[col].apply(lambda s: s.hour)
-    df['minute'] = df[col].apply(lambda s: s.minute)
-    df['time'] = df[col].apply(lambda s: time(hour=s.hour, minute=s.minute))
+    if not df.empty:
+        df['hour'] = df[col].apply(lambda s: s.hour)
+        df['minute'] = df[col].apply(lambda s: s.minute)
+        df['time'] = df[col].apply(lambda s: time(hour=s.hour, minute=s.minute))
+    return df
+
+
+def split_datetime(df, col, has_time=False):
+    if has_time:
+        df = split_time(df, col)
+
+    df['day'] = df[col].apply(lambda s: s.day)
+    df['month'] = df[col].apply(lambda s: s.month)
+    df['year'] = df[col].apply(lambda s: s.year)
+
     return df
 
 
@@ -83,6 +88,32 @@ def user_schedule(request):
         add_pd_datetime(df)
         df = df[['id', 'hour', 'minute', 'day', 'month', 'year']]
         return json.dumps(df.to_dict(orient='records'))
+    else:
+        return None
+
+
+def user_activity_schedule(request, activity_type):
+    user = MyUser.objects.get(email='admin@gmail.com')
+    has_time = False
+    if activity_type == 'parking':
+        query = StallReservation.objects.filter(user=user)
+    elif activity_type == 'gym':
+        query = GymSession.objects.filter(user=user)
+    elif activity_type == 'party':
+        query = PartyRoomReservation.objects.filter(user=user)
+    elif activity_type == 'tennis':
+        query = TennisCourtReservation.objects.filter(user=user)
+        has_time = True
+    else:
+        return None
+
+    if query.exists():
+        df = pd.DataFrame(list(query.values()))
+        df = split_datetime(df, 'date', has_time)
+        if not has_time:
+            df['hour'], df['minute'] = 0, 0      #TODO: walk around
+        df['type'] = activity_type
+        return json.dumps(df.to_dict(orient='records'), default=str)
     else:
         return None
 
@@ -120,31 +151,35 @@ def schedule():
         return None
 
 
-def prepareActivitySchedule(cur_date, activityRoomQuery, activityReservationQuery, type, activity_id, qtlimit, group):
+def prepare_activity_schedule(cur_date, activityRooms, activityReservationQuery, type, activity_id, label_name, qtlimit,
+                              group):
     data = []
     for day in [cur_date + timedelta(days=x) for x in range(7)]:
-        rooms = pd.DataFrame(list(activityRoomQuery.values()))
-        reservations = activityReservationQuery.values()
+        rooms = pd.DataFrame(list(activityRooms.values()))
+        reservations = activityReservationQuery.filter(date__gte=day, date__lt=day + timedelta(1)).values()
+
         if not reservations.exists():
             reservations = pd.DataFrame({activity_id: [], 'user_id': []})
         else:
             reservations = pd.DataFrame(list(reservations))
+        if type == 'tennis':
+            reservations['hour'], reservations['minute'] = reservations['date'].dt.hour, reservations['date'].dt.minute
         rooms = rooms.merge(reservations, left_on='id', right_on=activity_id, how='left', suffixes=('', '_y')).groupby(
-            group).count()['user_id'].reset_index().rename(
-            columns={'user_id': 'count', 'stall_label': 'label'})
+            group).count()['user_id'].reset_index().rename(columns={'user_id': 'count', label_name: 'label'})
         rooms['day'] = day.day
         rooms['month'] = day.month
         rooms['year'] = day.year
-        rooms['hour'] = 0
-        rooms['minute'] = 0
+        if not type == 'tennis':
+            rooms['hour'], rooms['minute'] = 0, 0
         rooms['type'] = type
         rooms['qtlimit'] = qtlimit  # depends on the activity
         data.append(rooms.to_dict(orient='records'))
     data = sum(data, [])
+
     return data
 
 
-def reservationExist(queryObj, col_dic):
+def reservation_exist(queryObj, col_dic):
     if not queryObj.exists():
         return pd.DataFrame(col_dic)
     else:
@@ -152,17 +187,12 @@ def reservationExist(queryObj, col_dic):
 
 
 def complete_df_to_dict(df, time, type, qtlimit):
-    df['day'] = time.day
-    df['month'] = time.month
-    df['year'] = time.year
-    df['type'] = type
-    df['qtlimit'] = qtlimit
+    df['day'], df['month'], df['year'] = time.day, time.month, time.year
+    df['type'], df['qtlimit'] = type, qtlimit
     if isinstance(time, datetime):
-        df['hour'] = time.hour
-        df['minute'] = time.minute
+        df['hour'], df['minute'] = time.hour, time.minute
     else:
-        df['hour'] = 0
-        df['minute'] = 0
+        df['hour'], df['minute'] = 0, 0
     return df.to_dict(orient='records')
 
 
@@ -175,17 +205,29 @@ def index(request):
 
 def signup(request):
     if request.method == 'POST':
+        code_form = CodeForm(request.POST)
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # log the user in
-            return redirect('index')
+            code = SignupCode.objects.get(code=code_form)
+            if code.exists():
+                user = form.save()
+                condo = Condo.objects.get(id=code.condo_id)
+                user.condo = condo
+                user.save() #TODO: ver c isso ta certo
+                # TODO: tambem mudar o status do codigo usado
+
+                # log the user in
+                return redirect('index')
+            else:
+                #TODO: caso de erro codigo errado
+                return render(request, "signup.html", {'form': form, 'code_form': code_form})
     else:
         form = UserCreationForm()
-    return render(request, "signup.html", {'form': form})
+        code_form = CodeForm(request.POST)
+    return render(request, "signup.html", {'form': form, 'code_form': code_form})
 
 
-def condo_signup(request):
+def condo_signup(request): #TODO: remover
     if request.method == 'POST':
         form = CondoCreationForm(request.POST)
         if form.is_valid():
@@ -210,7 +252,7 @@ def user_login(request):
                     return redirect('index')
         else:
             form = AuthenticationForm()
-            return render(request, "login.html", {'form': form, 'alert_msg': messages['error_password']})
+            return render(request, "login.html", {'form': form, 'alert_msg': MESSAGES['error_password']})
             # return redirect('index')
     else:
         form = AuthenticationForm()
@@ -226,90 +268,79 @@ def admin_dashboard(request):
     return redirect('/admin/')
 
 
-def activity(request, activity):
-    today = datetime.today()
-    cur_date = datetime(day=today.day, month=today.month, year=today.year) - timedelta(
-        1)  # TODO mudar aqui pra pegar a do dia e quando o usuario pedir
-    user = MyUser.objects.get(email=request.user)
-    data = []
-    if activity == 'gym':
-        print(user_schedule(request))
-        return render(request, 'calendar_dashboard.html', {'user_schedule': user_schedule(request)})
-    elif activity == 'parking':
-        for day in [cur_date + timedelta(days=x) for x in range(7)]:
-            stalls = pd.DataFrame(list(Stall.objects.filter(condo=user.condo).values()))
-            reservations = StallReservation.objects.filter(date=day).values()
-            reservations = reservationExist(reservations, {'stall_id': [], 'user_id': []})
-            stalls = \
-                stalls.merge(reservations, left_on='id', right_on='stall_id', how='left', suffixes=('', '_y')).groupby(
-                    ['id', 'stall_label']).count()['user_id'].reset_index().rename(
-                    columns={'user_id': 'count', 'stall_label': 'label'})
-            data.append(complete_df_to_dict(stalls, day, 'parking', 1))
-        stalls_data = sum(data, [])
-        return render(request, 'activity_calendar.html',
-                      {'activity_name': activity, 'activity_slots': json.dumps(stalls_data)})
-    elif activity == 'party':
-        for day in [cur_date + timedelta(days=x) for x in range(7)]:
-            rooms = pd.DataFrame(list(PartyRoom.objects.filter(condo=user.condo).values()))
-            reservations = PartyRoomReservation.objects.filter(day_of_use=day).values()
-            reservations = reservationExist(reservations, {'party_room_id': [], 'user_id': []})
-            rooms = \
-                rooms.merge(reservations, left_on='id', right_on='party_room_id', how='left',
-                            suffixes=('', '_y')).groupby(
-                    ['id', 'room_name']).count()['user_id'].reset_index().rename(
-                    columns={'user_id': 'count', 'room_name': 'label'})
-            data.append(complete_df_to_dict(rooms, day, 'party', 1))
-        rooms_data = sum(data, [])
-        return render(request, 'activity_calendar.html',
-                      {'activity_name': activity, 'activity_slots': json.dumps(rooms_data)})
-    elif activity == 'tennis':
-        for day in [cur_date + timedelta(days=x) for x in range(7)]:
-            courts = pd.DataFrame(list(TennisCourt.objects.filter(condo=user.condo).values()))
-            reservations = TennisCourtReservation.objects.filter(use_time__gte=day,
-                                                                 use_time__lt=(day + timedelta(1))).values()
-            reservations = reservationExist(reservations, {'court_id': [], 'user_id': []})
-            reservations = split_time(reservations, 'use_time')
-            courts = split_time(courts, 'time_slot')
-            courts = \
-                courts.merge(reservations, left_on=['id', 'hour', 'minute'], right_on=['court_id', 'hour', 'minute'],
-                             how='left', suffixes=('', '_y')).groupby(
-                    ['id', 'court_number', 'hour', 'minute']).count()['user_id'].reset_index().rename(
-                    columns={'user_id': 'count', 'court_number': 'label'})
-            courts.to_dict(orient='records')
-            # TODO: terminar de arrumar essa parte
-            data.append(complete_df_to_dict(courts, day, 'tennis', 1))
-            print(data)
-        tennis_data = sum(data, [])
-        return render(request, 'activity_calendar.html',
-                      {'activity_name': activity, 'activity_slots': json.dumps(tennis_data)})
-    return render(request, 'calendar.html')
-
-
 def code_generator(n):
     return [uuid.uuid1() for _ in range(n)]
 
 
 @login_required
 def user_dashboard(request):
-    options = [{'name': 'Gym', 'icon': 'fitness_center', 'color': '#FFC107'},
-               {'name': 'Parking', 'icon': 'garage', 'color': '#FFC107'},
-               {'name': 'Tennis', 'icon': 'sports_tennis', 'color': '#FFC107'},
-               {'name': 'Party', 'icon': 'celebration', 'color': '#FFC107'},
-               {'name': 'Visitors', 'icon': 'groups', 'color': '#FFC107'},
-               {'name': 'Setting', 'icon': 'manage_accounts', 'color': '#FFC107'}]
+    options = ACTIVITY_OPTIONS
+    if not request.user.is_staff:
+        options.remove('settings')
     return render(request, 'user_dashboard.html', {'options': options})
 
 
+@login_required
 def gym_session_calendar(request):
     calendar = schedule()
     return render(request, 'calendar.html',
-                  {'activity_name': activity, 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
+                  {'activity_name': 'gym', 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
 
 
 @login_required
-def activity_calendar(request):
+def activity_dashboard(request, activity_type):
+    if activity_type == 'gym':
+        return render(request, 'calendar_dashboard.html', context={'user_schedule': user_schedule(request)})
+    if activity_type == 'settings':
+        pass
+    else:
+        return render(request, 'activity_dashboard.html',
+                      context={'activity_type': activity_type, 'activity_labels': ACTIVITIES_DASH[activity_type], 'user_activity_schedule': user_activity_schedule(request, activity_type)})
+
+
+@login_required
+def activity_calendar(request, activity_type):
+    today = datetime.today()
+    cur_date = datetime(day=today.day, month=today.month, year=today.year) - timedelta(1)
+    date_ahead = cur_date + timedelta(7)  # TODO mudar aqui pra pegar a do dia e quando o usuario pedir
+    user = MyUser.objects.get(email=request.user)
+    data = []
+    if activity_type == 'gym':
+        return render(request, 'calendar_dashboard.html', {'user_schedule': user_schedule(request)})
+    elif activity_type == 'parking':
+        stalls_query = Stall.objects.filter(condo=user.condo)
+        reservations_query = StallReservation.objects.filter(date__gte=cur_date, date__lte=date_ahead)
+        data = prepare_activity_schedule(cur_date, stalls_query, reservations_query, 'parking', 'stall_id',
+                                         'stall_label', 1, ['id', 'stall_label'])
+    elif activity_type == 'party':
+        party_query = PartyRoom.objects.filter(condo=user.condo)
+        reservations_query = PartyRoomReservation.objects.filter(date__gte=cur_date, date__lte=date_ahead)
+        data = prepare_activity_schedule(cur_date, party_query, reservations_query, 'party', 'party_room_id',
+                                         'room_name', 1, ['id', 'room_name'])
+    elif activity_type == 'tennis':
+        # TODO: aqui tenho que verificar se o merge das chaves esta correto e se isso ta certo  no uml
+        for day in [cur_date + timedelta(days=x) for x in range(7)]:
+            courts = pd.DataFrame(list(TennisCourt.objects.filter(condo=user.condo).values()))
+            reservations = TennisCourtReservation.objects.filter(date__gte=day,
+                                                                 date__lte=day + timedelta(1)).values()
+            reservations = reservation_exist(reservations, {'court_id': [], 'user_id': [], 'hour': [], 'minute': []})
+            reservations = split_time(reservations, 'date')
+            print(reservations)
+            print(courts)
+            courts = split_time(courts, 'time_slot')
+            courts = \
+                courts.merge(reservations, left_on=['id'], right_on=['court_id'],
+                             how='left', suffixes=('', '_y')).groupby(
+                    ['id', 'court_number', 'hour', 'minute']).count()['user_id'].reset_index().rename(
+                    columns={'user_id': 'count', 'court_number': 'label'})
+            print("after merge")
+            print(courts)
+            courts.to_dict(orient='records')
+            data.append(complete_df_to_dict(courts, day, 'tennis', 1))
+        data = sum(data, [])
+
     return render(request, 'activity_calendar.html',
-                  {'activity_name': activity, 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
+                  {'activity_name': activity_type, 'activity_slots': json.dumps(data)})
 
 
 @login_required
@@ -340,20 +371,25 @@ def add_booking_activity(request, activity):
         if activity == 'parking':
             stall = Stall.objects.get(id=activity_id)
             StallReservation.objects.create(user=user, stall=stall, date=date.date())
-            print(activity_id, date, user, activity)
-            print(request.POST)
-            return render(request, 'activity_calendar.html', {'activity_name': activity})
+            print(activity_id, date.date(), user, activity) #TODO: remove
+            print(request.POST)#TODO: remove
+
         elif activity == 'party':
             party_room = PartyRoom.objects.get(id=activity_id)
-            print(activity_id, date, user)
-            print(party_room)
-            PartyRoomReservation.objects.create(user=user, party_room=party_room, day_of_use=date.date())
-            print(activity)
-            print(request.POST)
-            return render(request, 'activity_calendar.html', {'activity_name': activity})
+            print(activity_id, date, user)#TODO: remove
+            print(party_room)#TODO: remove
+            PartyRoomReservation.objects.create(user=user, party_room=party_room, date=date.date())
+            print(request.POST)#TODO: remove
         elif activity == 'tennis':
-
+            tennis_court = TennisCourt.objects.get(id=activity_id)
+            print(activity_id, date, user)#TODO: remove
+            print(tennis_court)#TODO: remove
+            TennisCourtReservation.objects.create(user=user, court=tennis_court, date=date.date())
+            print(request.POST)#TODO: remove
             pass
+        elif activity == 'gym':
+            pass # todo tem que fazer aqui
+        return redirect('activity_calendar', activity_type=activity)
     else:
         return redirect('user_dashboard')
 
@@ -366,37 +402,38 @@ def delete_booking(request):
 
 
 @login_required
-def delete_booking_activity(request, activity):
+def delete_activity_reservation(request, activity_type):
     if request.method == 'POST':
         id = request.POST['id']
-        if activity == 'parking':
-            pass
-        elif activity == 'party':
-            pass
-        elif activity == 'tennis':
-            pass
-    ts_id = request.POST['id']  # training session booking id
-    GymSession.objects.filter(id=ts_id).delete()
-    return render(request, 'calendar_dashboard.html', context={'user_schedule': user_schedule(request)})
+        if activity_type == 'parking':
+            StallReservation.objects.filter(id=id).delete()
+        elif activity_type == 'party':
+            PartyRoomReservation.objects.filter(id=id).delete()
+        elif activity_type == 'tennis':
+            TennisCourtReservation.objects.filter(id=id).delete()
+        elif activity_type == 'gym':
+            GymSession.objects.filter(id=id).delete()
+
+    return redirect('activity_dashboard', activity_type=activity_type)
 
 
-@login_required  # TODO: change for staff
+@staff_member_required
 def generate_codes(request):
     user = MyUser.objects.get(email=request.user)
-    # if request.method == 'POST' and user.is_staff: #TODO: para quando for staff
-    if request.method == 'POST' and user.is_staff:
-        codes = code_generator(int(request.POST['quantity']))
-        n_codes = GenerateCodeForm(request.POST)
-        print(str(codes))  # TODO: send remove
-        condo = Condo.objects.filter(condo=user.condo)
-        for code in codes:
-            SignupCode.objects.create(code=code, condo_id=condo)
-        return render(request, 'code_generator.html', context={'codes': codes})
+    print(user)
+    if request.method == 'POST':
+        val_int = int(request.POST['quantity'])
+        if val_int > 0:
+            codes = code_generator(val_int)
+            n_codes = GenerateCodeForm(request.POST)
+            print(str(codes))  # TODO: send remove
+            condo = Condo.objects.get(id=user.condo_id)
+            # for code in codes: # TODO:klimpar aqui depois
+            #     SignupCode.objects.create(code=code, condo_id=condo)
+            print(condo)
+            return render(request, 'code_generator.html', context={'codes': codes})
+        else:
+            #TODO: send error message
+            return render(request, 'code_generator.html')
     else:
         return render(request, 'code_generator.html')
-
-
-@login_required
-#  making one temporal view request for coding user dashboard
-def calendar(request):
-    return render(request, 'calendar.html')

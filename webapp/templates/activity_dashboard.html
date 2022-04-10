@@ -3,18 +3,19 @@
     <title>GMS - User Dashboard</title>
 
     <!-- Custom styles for this template -->
-    <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}"/>
+{#    <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}"/>#}
 
 {% endblock %}
 {% block content %}
 
 <main style="margin: auto 0" id="mainDiv">
+    <h1 class="text-secondary display-3 mb-3 text-center">{{ activity_labels.main_title }}</h1>
     <div class="container-sm border border-1 p-2 py-3 rounded shadow" >
       <!-- send to calendar view -->
       <div class="container-sm">
-        <a href="{% url 'gym_session_calendar' %}">
+        <a href="{% url 'activity_calendar' activity_type=activity_type %}">
           <button class="btn btn-primary float-sm-end" id="new-workout-tab" type="button">
-            Book New Workout
+            {{ activity_labels.add_btn_label }}
           </button>
         </a>
       </div>
@@ -23,12 +24,12 @@
       <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="workout-tab" data-bs-toggle="tab" data-bs-target="#workout" type="button" role="tab" aria-controls="home" aria-selected="true">
-            Workouts
+            {{ activity_labels.first_tab_label }}
           </button>
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link" id="workout-diary-tab" data-bs-toggle="tab" data-bs-target="#workout-diary" type="button" role="tab" aria-controls="profile" aria-selected="false">
-            Workouts Diary
+            {{ activity_labels.second_tab_label }}
           </button>
         </li>
   
@@ -132,24 +133,24 @@
               <div class="container fs-3 text-muted fw-bold ">Stats</div>
               <!-- the list -->
               <div class="p-3 fs-5" >
-                Remaining Trainings: <span id="remainingTrainings">--</span>
+                  {{ activity_labels.remaining_label }}: <span id="remainingTrainings">--</span>
               </div>
               <div class="p-3 fs-5" >
-                Finished Trainings: <span id="finishedTrainings">--</span>
+                {{ activity_labels.finished_label }}: <span id="finishedTrainings">--</span>
               </div>
               <div class="p-3 fs-5" >
-                Missed Trainings: <span id="missedTrainings">--</span>
+                {{ activity_labels.missed_label }}: <span id="missedTrainings">--</span>
               </div>
               <div class="p-3 fs-5 fw-bold" >
-                Total time in Gym: <span id="totalTimeGym">-h--m</span>
+                {{ activity_labels.total_label }}: <span id="totalTimeGym">-h--m</span>
               </div>
             </div>
   
           </div>
   
           <!-- weeks abailability -->
-          <a href="/calendar/" class="container btn btn-success">
-            <div class="container fs-5 fw-bold ">Pump those numbers up! Check out this week's availability</div>
+          <a href="{% url 'activity_calendar' activity_type=activity_type %}" class="container btn btn-success">
+            <div class="container fs-5 fw-bold ">{{ activity_labels.new_session_message }}</div>
   
             
             
@@ -212,7 +213,7 @@
           <div class="container p-3 rounded bg-warning bg-gradient d-flex align-items-center">
             <!-- button to cancel workout-->
             
-            <p class="m-0 flex-fill text-center fs-3 ">Are You Sure You Wanna Delete?</p>
+            <p class="m-0 flex-fill text-center fs-3 ">Are You Sure You Want to Delete?</p>
           </div>
           <div class="container d-flex align-items-center py-3 text-center">
               <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="modalWorkoutTime">------</div>
@@ -222,7 +223,7 @@
               id:<span id="modalWorkoutId">-</span>
           </div>
         </div>
-        <form action="/delete_booking/" method="post">
+        <form action="{% url 'delete_activity_reservation' activity_type=activity_type %}" method="post">
             {% csrf_token %}
         <div class="modal-footer">
             <input type="hidden" id="idPost" value="" name="id">
@@ -235,9 +236,9 @@
   </div>
 
     <script>
-        let data = {{ user_schedule|safe }}
+        let data = {{ user_activity_schedule|safe }}
     </script>
-    <script type="text/javascript" src="{% static 'js/user_dashboard.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/activity_dashboard.js' %}"></script>
 
 
 {% endblock %}
