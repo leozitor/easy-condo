@@ -9,7 +9,7 @@ class Activity {
         this._label = label
         this._quantity = quantity;
         this._id = id;
-        this._type= type;
+        this._type = type;
         this._qtlimit = qtlimit;
     }
 
@@ -70,9 +70,11 @@ class Activity {
     getId() {
         return this._id;
     }
+
     getType() {
         return this._type;
     }
+
     getQtlimit() {
         return this._qtlimit;
     }
@@ -141,6 +143,55 @@ class Activity {
 const ActivityCalendar = (() => {
     let calendar = [];
 
+    function createButtonDiv(ses) {
+
+        let button = document.createElement("button");
+        button.classList.add("btn", "col", "p-2", "sessionBookingItem", "bg-white")
+        button.setAttribute("data-bs-toggle", "modal");
+        button.setAttribute("data-bs-target", "#book-workout")
+
+        let activityLabel = "" // for custom labels given activity
+        let textWrap = "text-nowrap"
+        if (ses.getType() === "parking") {
+            activityLabel = "Stall " + ses.getLabel()
+        } else if (ses.getType() === "tennis") {
+            textWrap = ""
+            activityLabel = "Court " + ses.getLabel() + " " + ses.getTimeString()
+        } else if (ses.getType() === "party") {
+            // activityLabel = "Room " + ses.getLabel()
+
+            activityLabel = ses.getLabel()
+        } else {
+            activityLabel = ses.getLabel()
+        }
+        let statusCont = ""
+        let statusClass = ""
+        if (ses.quantity === 0) {
+            statusCont = "Available"
+            statusClass = "bg-success text-white"
+        } else if (ses.quantity >= 1) {
+            statusCont = "Full"
+            statusClass = "bg-danger text-white"
+            //disable modal
+            button.setAttribute("data-bs-toggle", "")
+            button.setAttribute("data-bs-target", "")
+        } else {
+            statusClass = "bg-success text-white"
+        }
+        button.innerHTML = `
+              <div class="row row-cols-2 g-1 p-1 border bg-light" sday="${ses.date.getDate()}" 
+              smonth="${ses.date.getMonth() + 1}" syear="${ses.getShortYear()}" shour="${ses.date.getHours()}" 
+              smin="${ses.date.getMinutes()}" sdateshort="${ses.getDateShort()}" sdatestring="${ses.getDateString()}" 
+              sdatepythonformat="${ses.getDatePythonFormat()}" activityid="${ses.getId()}">
+              <div class="col-7 fs-5 align-self-center ${textWrap}" >
+                  ${activityLabel}
+              </div>
+              <div class="col-5 border rounded align-self-center text-white ${statusClass}">${statusCont}</div>
+            </div>`
+
+
+        return button
+    }
 
     let fetchCalendar = () => {
 
@@ -203,90 +254,20 @@ const ActivityCalendar = (() => {
     let _createActivitySessions = (day) => {
         //day is so we know which day session array we are taking from calendar
         let bookOnDate = document.getElementById("bookOnDate");
-        let slots = document.getElementById("slots");
-
+        let leftSlots = document.getElementById("leftslots");
+        let rightSlots = document.getElementById("rightslots");
 
         calendar[day].forEach((ses, i) => {
             //set title header
             if (i == 0) {
                 bookOnDate.textContent = ses.getDateString();
             }
-
-            // <div class="d-flex">
-            // <button class="list-group-item list-group-item-action d-flex px-2 sessionBookingItem"
-            // data-bs-toggle="modal" data-bs-target="#book-workout">
-            //   <div class="fs-5 align-items-center w-50" sDay="" sMonth="" sYear="" sHour="" sMin="" sDateShort="25/08/21">06:00AM</div>
-            //   <div class="bg-success text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">0/4</div>
-            // </button>*2
-            //</div>
-
-            // <div className="container d-flex flex-wrap px-4 py-2">
-            //     <!-- slots -->
-            //     <button className="row px-2 sessionBookingItem d-flex" data-bs-toggle="" data-bs-target="">
-            //         <div className="col fs-5" sday="7" smonth="3" syear="22" shour="0" smin="0"
-            //              sdateshort="07/03/22" sdatestring="Monday, March 7" sdatepythonformat="03/07/2022, 00:00">stall
-            //             1
-            //         </div>
-            //         <div className=" col border rounded bg-success text-white align-self-center bg-white">available
-            //         </div>
-            //     </button>
-            //
-            //
-            // </div>
-            let activityLabel = "" // for custom labels given activity
-            let btnDiv = document.createElement("div")
-            btnDiv.classList.add("col", "d-flex", "justify-content-center")
-            let button = document.createElement("button");
-            button.classList.add("row", "p-2", "border", "sessionBookingItem", "bg-white");
-            button.setAttribute("data-bs-toggle", "modal");
-            button.setAttribute("data-bs-target", "#book-workout");
-
-
-            let firstDiv = document.createElement("div");
-            firstDiv.classList.add("col", "fs-5", "align-self-center", "text-nowrap");
-            firstDiv.setAttribute("sDay", ses.date.getDate());
-            firstDiv.setAttribute("sMonth", ses.date.getMonth() + 1);
-            firstDiv.setAttribute("sYear", ses.getShortYear());
-            firstDiv.setAttribute("sHour", ses.date.getHours());
-            firstDiv.setAttribute("sMin", ses.date.getMinutes());
-            firstDiv.setAttribute("sDateShort", ses.getDateShort());
-            firstDiv.setAttribute("sDateString", ses.getDateString());
-            firstDiv.setAttribute("sDatePythonFormat", ses.getDatePythonFormat());
-            firstDiv.setAttribute("activityId", ses.getId())
-            console.log("o tipo é: " + ses.getType())
-            if (ses.getType() === "parking") {
-                 activityLabel = "Stall " + ses.getLabel()
-            } else if (ses.getType() === "tennis") {
-                activityLabel = "Court " + ses.getLabel()
-            } else if (ses.getType() === "party") {
-                // activityLabel = "Room " + ses.getLabel()
-                activityLabel = ses.getLabel()
+            let but = createButtonDiv(ses)
+            if (i % 4 === 0 || i % 4 === 1) {
+                leftSlots.append(but)
             } else {
-                firstDiv.textContent = ses.getLabel()
+                rightSlots.append(but)
             }
-            firstDiv.textContent = activityLabel
-
-            button.append(firstDiv);
-
-            let secondDiv = document.createElement("div");
-            secondDiv.classList.add("col", "border", "rounded", "align-self-center");
-            if (ses.quantity === 0) {
-                secondDiv.textContent = "Available"
-                secondDiv.classList.add("bg-success", "text-white");
-            } else if (ses.quantity >= 1) {
-                secondDiv.textContent = "Full"
-                secondDiv.classList.add("bg-danger", "text-white");
-                //disable modal
-                button.setAttribute("data-bs-toggle", "");
-                button.setAttribute("data-bs-target", "");
-            } else {
-                secondDiv.classList.add("bg-success", "text-white");
-            }
-
-            button.append(secondDiv);
-            //end of div or start of div
-            btnDiv.append(button);
-            slots.append(btnDiv);
         })
 
         //create new Item Event Listeners
@@ -350,14 +331,8 @@ const ActivityCalendar = (() => {
 
         buttons.forEach(b => {
             b.addEventListener("click", () => {
-                let slots = document.getElementById("slots");
-
-                slots.innerHTML = "";
-
-                // let loader = document.createElement("div");
-                // loader.setAttribute("id", "loader");
-                // loader.textContent = "Loading..."
-                // slots.append(loader);
+                document.getElementById("leftslots").innerHTML = ""
+                document.getElementById("rightslots").innerHTML = ""
 
                 _createActivitySessions(b.getAttribute("weekIndex"));
 
@@ -397,8 +372,7 @@ const ActivityCalendar = (() => {
         //     <div class="fs-5 align-items-center w-50" bDay="" bMonth="" bYear="" bHour="" bMin="" bDateShort="25/08/21">06:00AM</div>
         //     <div class="bg-success text-white border rounded primary row row-cols-2 flex-grow-1 mx-2 align-items-center justify-content-center">0/4</div>
         // </button>
-
-        modalTime.textContent = el.children[0].textContent;
+        modalTime.textContent = el.children[0].children[0].textContent;
         modalDate.textContent = el.children[0].getAttribute("sDateShort");
         modalDateString.textContent = el.children[0].getAttribute("sDateString");
         timeStampPost.setAttribute("value", el.children[0].getAttribute("sDatePythonFormat"));

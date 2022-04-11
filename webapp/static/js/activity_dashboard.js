@@ -3,7 +3,7 @@
 
 //update the deleteWorkoutEventListener to do a post.
 
-const time_activities = ["tennis", "gym"]
+const time_activities = ["tennis", "gym"] // TODO: verificar isso aqui
 class ActivitySession {
     constructor(date, id, status, type){
         this._date = date;

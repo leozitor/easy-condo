@@ -211,10 +211,7 @@ def reservation_exist(queryObj, col_dic):
 def complete_df_to_dict(df, time, type, qtlimit):
     df['day'], df['month'], df['year'] = time.day, time.month, time.year
     df['type'], df['qtlimit'] = type, qtlimit
-    if isinstance(time, datetime):
-        df['hour'], df['minute'] = time.hour, time.minute
-    else:
-        df['hour'], df['minute'] = 0, 0
+
     return df.to_dict(orient='records')
 
 
