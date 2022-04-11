@@ -45,5 +45,5 @@ ACTIVITY_OPTIONS = [{'name': 'gym', 'icon': 'fitness_center', 'color': '#FFC107'
                     {'name': 'parking', 'icon': 'garage', 'color': '#FFC107'},
                     {'name': 'tennis', 'icon': 'sports_tennis', 'color': '#FFC107'},
                     {'name': 'party', 'icon': 'celebration', 'color': '#FFC107'},
-                    {'name': 'visitors', 'icon': 'groups', 'color': '#FFC107'},
-                    {'name': 'settings', 'icon': 'manage_accounts', 'color': '#FFC107'}]
+                    {'name': 'visitors', 'icon': 'groups', 'color': '#FFC107'}]
+                    # ,{'name': 'generate_codes', 'icon': 'manage_accounts', 'color': '#FFC107'}]

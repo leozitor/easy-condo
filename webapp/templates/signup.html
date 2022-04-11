@@ -52,10 +52,12 @@
         let ps = document.querySelectorAll("p")
         let error = document.querySelector(".errorlist").style.display = "none"
         let code = document.querySelector("#id_code")
+        let phoneNumber = document.querySelector("#id_phone_number")
         document.querySelector("#id_email").placeholder = "you@example.com"
         document.querySelector("#id_address").placeholder = "124 Main St APT #123"
-        document.querySelector("#id_phone_number").placeholder = "(604) 555-1234"
         document.querySelector("#id_date_of_birth").placeholder = "04/01/1990"
+        phoneNumber.placeholder = "(604) 555-1234"
+        phoneNumber.type = "tel"
         code.placeholder = "Enter Your Serial Invite Code"
         code.parentNode.children[0].innerHTML = "Invitation Code"
         for (let label of labels)

@@ -18,4 +18,5 @@ urlpatterns = [
     path('gym_session_calendar/', views.gym_session_calendar, name='gym_session_calendar'),
     path('activity_calendar/<str:activity_type>', views.activity_calendar, name='activity_calendar'),
     path('generate_codes/', views.generate_codes, name='generate_codes'),
+    path('generate_codes/download_csv/', views.download_csv, name='download_csv')
 ]

@@ -82,12 +82,14 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('email', 'date_of_birth', 'is_admin', 'condo')
+    list_display = ('email', 'date_of_birth', 'is_admin', 'user_type', 'condo', 'phone_number')
     list_filter = ('is_admin',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('date_of_birth', 'condo')}),
-        ('Permissions', {'fields': ('is_admin',)}),
+        ('Personal info', {'fields': ('date_of_birth', 'condo', 'phone_number')}),
+        ('Permissions', {'fields': ('is_admin', 'user_type')}),
+        # TODO: remove here the is_admin that is the super user e remover o condo tbm
+
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -101,9 +103,44 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('email',)
     filter_horizontal = ()
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(UserAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        return qs.filter(condo=condo)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['condo'].queryset = Condo.objects.filter(id=request.user.condo_id)
+        return form
+
+
+class CondoAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address')
+
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(CondoAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        return qs.filter(id=request.user.condo_id)
+
 
 class GymSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'checkin_code', 'session_datetime', 'booked_user', 'booking_status')
+    list_display = ('id', 'session_datetime', 'booked_user', 'booking_status')
 
     def get_user(self, obj):
         return obj.booked_user.user.username
@@ -111,33 +148,181 @@ class GymSessionAdmin(admin.ModelAdmin):
     get_user.short_description = 'username'
     get_user.admin_order_field = 'user__username'
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(GymSessionAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        users = MyUser.objects.filter(condo=condo)
+        return qs.filter(booked_user__in=users)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['booked_user'].queryset = MyUser.objects.filter(condo=request.user.condo_id)
+        return form
+
 
 class StallAdmin(admin.ModelAdmin):
     list_display = ('id', 'stall_label', 'condo', 'stall_type')
+
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(StallAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        return qs.filter(condo=condo)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['condo'].queryset = Condo.objects.filter(id=request.user.condo_id)
+        return form
 
 
 class StallReservationAdmin(admin.ModelAdmin):
     list_display = ('id', 'stall', 'user', 'date')
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(StallReservationAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        users = MyUser.objects.filter(condo=condo)
+        return qs.filter(user__in=users)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['stall'].queryset = Stall.objects.filter(condo=request.user.condo_id)
+        form.base_fields['user'].queryset = MyUser.objects.filter(condo=request.user.condo_id)
+        return form
+
 
 class TennisCourtAdmin(admin.ModelAdmin):
     list_display = ('id', 'court_number', 'condo', 'time_slot')
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(TennisCourtAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        return qs.filter(condo=condo)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['condo'].queryset = Condo.objects.filter(id=request.user.condo_id)
+        return form
 
 class TennisCourtReservationAdmin(admin.ModelAdmin):
     list_display = ('id', 'court', 'user', 'date')
+
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(TennisCourtReservationAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        users = MyUser.objects.filter(condo=condo)
+        return qs.filter(user__in=users)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields['court'].queryset = TennisCourt.objects.filter(condo=request.user.condo_id)
+        form.base_fields['user'].queryset = MyUser.objects.filter(condo=request.user.condo_id)
+        return form
 
 
 class PartyRoomAdmin(admin.ModelAdmin):
     list_display = ('id', 'room_name', 'condo')
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(PartyRoomAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        return qs.filter(condo=condo)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_admin:
+            return form
+
+        form.base_fields["condo"].queryset = Condo.objects.filter(id=request.user.condo_id)
+        return form
+
 
 class PartyRoomReservationAdmin(admin.ModelAdmin):
     list_display = ('id', 'party_room', 'user', 'date')
 
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(PartyRoomReservationAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        users = MyUser.objects.filter(condo=condo)
+        return qs.filter(user__in=users)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if request.user.is_admin:
+            return form
+
+        form.base_fields["user"].queryset = MyUser.objects.filter(condo=request.user.condo_id)
+        form.base_fields["party_room"].queryset = PartyRoom.objects.filter(condo=request.user.condo_id)
+        return form
+
 
 # Now register the new UserAdmin...
 admin.site.register(MyUser, UserAdmin)
+admin.site.register(Condo, CondoAdmin)
 admin.site.register(GymSession, GymSessionAdmin)
 admin.site.register(Stall, StallAdmin)
 admin.site.register(StallReservation, StallReservationAdmin)
@@ -145,6 +330,7 @@ admin.site.register(TennisCourt, TennisCourtAdmin)
 admin.site.register(TennisCourtReservation, TennisCourtReservationAdmin)
 admin.site.register(PartyRoom, PartyRoomAdmin)
 admin.site.register(PartyRoomReservation, PartyRoomReservationAdmin)
+
 
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.

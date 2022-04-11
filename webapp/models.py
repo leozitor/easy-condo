@@ -189,7 +189,7 @@ class TennisCourt(models.Model):
 class TennisCourtReservation(models.Model):
     court = models.ForeignKey(TennisCourt, on_delete=models.CASCADE)
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
-    date = models.DateTimeField()  #TODO talvez eu só precise da  data do TennisCourt
+    date = models.DateField()
 
     # status = models.CharField(max_length=1, choices=STALL_STATUS_TYPE, default='C')
 

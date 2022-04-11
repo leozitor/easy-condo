@@ -6,6 +6,7 @@
         h1 {
             text-align: center;
         }
+
         .activityBtn {
             width: 100%;
             border-radius: 10px;
@@ -17,7 +18,9 @@
             margin: 0;
         }
 
-        .material-icons.md-48 { font-size: 50px; }
+        .material-icons.md-48 {
+            font-size: 50px;
+        }
     </style>
 
 {% endblock %}
@@ -37,6 +40,18 @@
                     </a>
                 </div>
             {% endfor %}
+            {% if request.user.is_staff %}
+                <div class="col">
+                    <a href="/generate_codes/">
+                        <button type="button" class="btn btn-secondary p-3 activityBtn">
+                            <span class="material-icons md-48">manage_accounts</span>
+                            <h4> Generate Codes</h4>
+                        </button>
+
+                    </a>
+                </div>
+            {% endif %}
+
         </div>
     </div>
 
