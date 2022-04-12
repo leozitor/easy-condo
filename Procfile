@@ -1,1 +1,1 @@
-web: gunicorn GMS.wsgi
+web: gunicorn easycondo.wsgi
