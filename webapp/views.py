@@ -113,7 +113,7 @@ def user_schedule(request):
 
 
 def user_activity_schedule(request, activity_type):
-    user = MyUser.objects.get(email='admin@gmail.com')
+    user = MyUser.objects.get(email=request.user)
     has_time = False
     if activity_type == 'parking':
         query = StallReservation.objects.filter(user=user)
@@ -303,8 +303,6 @@ def code_generator(n):
 @login_required
 def user_dashboard(request):
     options = ACTIVITY_OPTIONS
-    if not request.user.is_staff:
-        options.remove('settings')
     return render(request, 'user_dashboard.html', {'options': options})
 
 
