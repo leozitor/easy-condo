@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-hx8$r2eaee)2e@8wyb7^6xtj1u&@y8yh-0#%)@+$e@t1&4f^x6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'webapp.MyUser'
 LOGIN_REDIRECT_URL = 'user_dashboard'
