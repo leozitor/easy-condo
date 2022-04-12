@@ -131,16 +131,18 @@ def user_activity_schedule(request, activity_type):
         df = pd.DataFrame(list(query.values()))
         df = split_datetime(df, 'date', has_time)
         if not has_time:
-            df['hour'], df['minute'] = 0, 0  # TODO: walk around
+            df['hour'], df['minute'] = 0, 0
         df['type'] = activity_type
         return json.dumps(df.to_dict(orient='records'), default=str)
     else:
         return None
 
 
-def query_schedule():
+def query_schedule(request):
     dt = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    query = GymSession.objects.filter(session_datetime__gte=dt)
+    user = MyUser.objects.get(email=request.user)
+    users = MyUser.objects.filter(condo=user.condo)
+    query = GymSession.objects.filter(session_datetime__gte=dt, booked_user__in=users)
     if query.exists():
         df = pd.DataFrame(list(query.values()))
         add_pd_datetime(df)
@@ -149,9 +151,9 @@ def query_schedule():
         return None
 
 
-def schedule():
+def schedule(request):
     schedule = prepare_schedule()
-    df = query_schedule()
+    df = query_schedule(request)
     if df is not None:
         calendar = pd.merge(schedule, df, how='left', on=['hour', 'minute', 'day'], suffixes=('', '_y')).drop(
             columns=['year_y', 'month_y'])
@@ -184,6 +186,8 @@ def prepare_activity_schedule(cur_date, activityRooms, activityReservationQuery,
             reservations = pd.DataFrame(list(reservations))
         if type == 'tennis':
             reservations['hour'], reservations['minute'] = reservations['date'].dt.hour, reservations['date'].dt.minute
+        print(reservations)
+        print(rooms)
         rooms = rooms.merge(reservations, left_on='id', right_on=activity_id, how='left', suffixes=('', '_y')).groupby(
             group).count()['user_id'].reset_index().rename(columns={'user_id': 'count', label_name: 'label'})
         rooms['day'] = day.day
@@ -308,7 +312,7 @@ def user_dashboard(request):
 
 @login_required
 def gym_session_calendar(request):
-    calendar = schedule()
+    calendar = schedule(request)
     return render(request, 'calendar.html',
                   {'activity_name': 'gym', 'elements': [1, 2, 3, 4, 5, 6], 'calendar': calendar})
 
@@ -330,7 +334,7 @@ def activity_dashboard(request, activity_type):
 def activity_calendar(request, activity_type):
     today = datetime.today()
     cur_date = datetime(day=today.day, month=today.month, year=today.year)
-    date_ahead = cur_date + timedelta(7)  # TODO mudar aqui pra pegar a do dia e quando o usuario pedir
+    date_ahead = cur_date + timedelta(7)
     user = MyUser.objects.get(email=request.user)
     data = []
     if activity_type == 'gym':
@@ -346,7 +350,6 @@ def activity_calendar(request, activity_type):
         data = prepare_activity_schedule(cur_date, party_query, reservations_query, 'party', 'party_room_id',
                                          'room_name', 1, ['id', 'room_name'])
     elif activity_type == 'tennis':
-        # TODO: aqui tenho que verificar se o merge das chaves esta correto e se isso ta certo  no uml
         for day in [cur_date + timedelta(days=x) for x in range(7)]:
             courts = pd.DataFrame(list(TennisCourt.objects.filter(condo=user.condo).values()))
             reservations = TennisCourtReservation.objects.filter(date__gte=day,
@@ -387,11 +390,11 @@ def add_booking(request):
     after_day = cur_day + timedelta(days=1)
     user_ct = GymSession.objects.filter(session_datetime__gte=cur_day, session_datetime__lt=after_day,
                                         booked_user=user).count()
-    if count_ts < 4 and user_ct < 1:  # TODO: insert based on the condo
+    if count_ts < 4 and user_ct < 1:
         GymSession.objects.create(session_datetime=dt, booked_user=user)
-        return render(request, 'calendar.html', context={'calendar': schedule()})
+        return render(request, 'calendar.html', context={'calendar': schedule(request)})
     else:
-        return render(request, 'calendar.html', context={'calendar': schedule()})
+        return render(request, 'calendar.html', context={'calendar': schedule(request)})
 
 
 @login_required
@@ -403,24 +406,15 @@ def add_booking_activity(request, activity):
         if activity == 'parking':
             stall = Stall.objects.get(id=activity_id)
             StallReservation.objects.create(user=user, stall=stall, date=date.date())
-            print(activity_id, date.date(), user, activity)  # TODO: remove
-            print(request.POST)  # TODO: remove
-
         elif activity == 'party':
             party_room = PartyRoom.objects.get(id=activity_id)
-            print(activity_id, date, user)  # TODO: remove
-            print(party_room)  # TODO: remove
             PartyRoomReservation.objects.create(user=user, party_room=party_room, date=date.date())
-            print(request.POST)  # TODO: remove
         elif activity == 'tennis':
             tennis_court = TennisCourt.objects.get(id=activity_id)
-            print(activity_id, date, user)  # TODO: remove
-            print(tennis_court)  # TODO: remove
             TennisCourtReservation.objects.create(user=user, court=tennis_court, date=date.date())
-            print(request.POST)  # TODO: remove
             pass
         elif activity == 'gym':
-            pass  # todo tem que fazer aqui
+            pass
         return redirect('activity_calendar', activity_type=activity)
     else:
         return redirect('user_dashboard')
