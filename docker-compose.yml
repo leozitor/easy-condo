@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  #Still don't need DB , maybe later
+#    db:
+#        image: postgres
+    web:
+        build: .
+        volumes:
+            - .:/usr/src/app
+        ports:
+            - "80:80"
