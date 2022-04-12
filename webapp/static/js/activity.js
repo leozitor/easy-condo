@@ -306,12 +306,13 @@ const ActivityCalendar = (() => {
 
 
             week.forEach(ses => {
+                console.log(ses.quantity)
                 availability += ses.quantity;
                 counter++;
             })
-
+            // console.log(availability);
             let quantity_limit = week[0].getQtlimit();
-
+            // console.log(quantity_limit)
             let percentage = (availability / (counter * quantity_limit)) * 100;
 
             span.textContent = parseFloat(percentage).toFixed(2) + "%";
@@ -406,6 +407,8 @@ const ActivityCalendar = (() => {
 
 //create event listeners;
 window.onload = ActivityCalendar.fetchCalendar();
+
+
 
 
 

@@ -58,7 +58,7 @@
                   <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="mainWorkoutTime">--:----</div>
                   <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2" id="mainWorkoutDate">--/--/--</div>
               </div>
-              <div class="container">
+              <div class="container" style>
                   id:<span id="mainWorkoutId">------</span>
               </div>
             </div>
@@ -218,7 +218,7 @@
               <div class=" py-4 px-2 mx-2 rounded  shadow bg-secondary bg-gradient text-white fs-2" id="modalWorkoutTime">------</div>
               <div class="container py-4 px-2 mx-2 rounded  shadow flex-grow bg-secondary bg-gradient text-white fs-2" id="modalWorkoutDate">--/--/--</div>
           </div>
-          <div class="container">
+          <div class="container" >
               id:<span id="modalWorkoutId">-</span>
           </div>
         </div>
@@ -236,8 +236,20 @@
 
     <script>
         let data = {{ user_schedule|safe }}
+
     </script>
+
     <script type="text/javascript" src="{% static 'js/user_dashboard.js' %}"></script>
 
+    <script defer>
+    let workId = document.getElementById('mainWorkoutId')
+workId.parentElement.style.display = "none"
+let workItems = document.querySelectorAll('.upcomingWorkoutItem')
+for(let workItem of workItems){
+    let item = workItem.childNodes[2]
+    console.log(item)
+    item.style.display = "none"
+}
+    </script>
 
 {% endblock %}

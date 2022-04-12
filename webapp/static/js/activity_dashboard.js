@@ -155,7 +155,7 @@ const userDash  = (()=>{
             }
 
             let divTitle = document.createElement("div");
-            divTitle.classList.add("d-flex", "w-100", "justify-content-between");
+            divTitle.classList.add("d-flex", "w-100", "justify-content-center");
 
             let hDate = document.createElement("h5");
             hDate.classList.add("mb-1");
@@ -168,7 +168,7 @@ const userDash  = (()=>{
             divTitle.append(hDate);
 
             let smallId = document.createElement("small");
-            smallId.classList.add("text-muted");
+            smallId.classList.add("text-muted", "idClassName");
             smallId.textContent = "id: " + actSess.id;
 
             divList.append(divTitle);
@@ -185,6 +185,8 @@ const userDash  = (()=>{
         let finishedTrainings = document.getElementById("finishedTrainings");
         let missedTrainings = document.getElementById("missedTrainings");
         let totalTimeGym = document.getElementById("totalTimeGym");
+        let actType = document.querySelector(".upcomingWorkoutItem").getAttribute("acttype");
+
 
         let today = new Date();
         let remainingBookings = activities.filter(actSess=>{
@@ -207,6 +209,7 @@ const userDash  = (()=>{
 
         remainingTrainings.textContent = remainingBookings.length;
 
+
         let gymTimeHours = Math.floor(finishedOkBookings.length / 2);
         let gymTimeMinutes = finishedOkBookings.length % 2;
         if(gymTimeMinutes == 1){
@@ -214,7 +217,9 @@ const userDash  = (()=>{
         }
 
         totalTimeGym.textContent = gymTimeHours + "h" + gymTimeMinutes + "m";
-
+        if (actType === "parking" || actType === "party"){
+            totalTimeGym.textContent =  finishedBookings.length
+        }
 
 
 
@@ -256,7 +261,7 @@ const userDash  = (()=>{
             divTitle.append(hDate);
 
             let smallId = document.createElement("small");
-            smallId.classList.add("text-muted");
+            smallId.classList.add("text-muted", "idClassName");
             smallId.textContent = "id: " + actSess.id;
 
             divList.append(divTitle);
@@ -311,7 +316,7 @@ const userDash  = (()=>{
             dateShortFormat.textContent = actSess.getDateShort();
 
             let idHolder = document.createElement("small");
-            idHolder.classList.add("text-muted");
+            idHolder.classList.add("text-muted", "idClassName");
             idHolder.textContent = "id: ";
 
             let spanId = document.createElement("span");

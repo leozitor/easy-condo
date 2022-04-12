@@ -286,7 +286,7 @@ const BookingCalendar  = (()=>{
             let day = week[0].getDayShortFormat();
 
             let button = document.createElement("button");
-            button.classList.add("btn", "btn-primary", "fs-5", "fw-bold", "text-center", "footerButton");
+            button.classList.add("btn", "btn-outline-primary", "fs-5", "text-center", "footerButton");
             button.textContent = day;
             button.append(document.createElement("br"));
 

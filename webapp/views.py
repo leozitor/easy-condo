@@ -193,10 +193,11 @@ def prepare_activity_schedule(cur_date, activityRooms, activityReservationQuery,
             rooms['hour'], rooms['minute'] = 0, 0
         rooms['type'] = type
         rooms['qtlimit'] = qtlimit  # depends on the activity
+        print("ver esse")
+        print(data)
         data.append(rooms.to_dict(orient='records'))
     data = sum(data, [])
-    print("ver esse")
-    print(data)
+
 
     return data
 
@@ -224,38 +225,43 @@ def index(request):
 
 def signup(request):
     if request.method == 'POST':
-        code_form = CodeForm(request.POST)
+        code_form = request.POST.get('code')
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            code = SignupCode.objects.get(code=code_form)
+            code = SignupCode.objects.filter(code=code_form)
             if code.exists():
+                code = SignupCode.objects.get(code=code_form)
+                condo = Condo.objects.get(id=code.condo_id.id)
                 user = form.save()
-                condo = Condo.objects.get(id=code.condo_id)
                 user.condo = condo
-                user.save()  # TODO: ver c isso ta certo
-                # TODO: tambem mudar o status do codigo usado
-
-                # log the user in
-                return redirect('index')
+                user.save()
+                code.use_status = 'U'
+                code.save()
+                return redirect('message', message='account_creation_success')
             else:
-                # TODO: caso de erro codigo errado
-                return render(request, "signup.html", {'form': form, 'code_form': code_form})
+                return redirect('message', message='wrong_code')
+        else:
+            return redirect('message', message='form_invalid')
     else:
         form = UserCreationForm()
         code_form = CodeForm(request.POST)
     return render(request, "signup.html", {'form': form, 'code_form': code_form})
 
 
-def condo_signup(request):  # TODO: remover
-    if request.method == 'POST':
-        form = CondoCreationForm(request.POST)
-        if form.is_valid():
-            condo = form.save()
-            # log the user in
-            return redirect('index')
+def message(request, message):
+    if message == 'account_creation_success':
+        form = AuthenticationForm()
+        return render(request, "login.html", {'form': form, 'alert_msg': MESSAGES[message]})
+    elif message == 'wrong_code':
+        form = UserCreationForm()
+        code_form = CodeForm(request.POST)
+        return render(request, "signup.html", {'form': form, 'code_form': code_form, 'alert_msg': MESSAGES[message]})
+    elif message == 'form_invalid':
+        form = UserCreationForm()
+        code_form = CodeForm(request.POST)
+        return render(request, "signup.html", {'form': form, 'code_form': code_form, 'alert_msg': MESSAGES[message]})
     else:
-        form = CondoCreationForm()
-    return render(request, "condo_signup.html", {'form': form})
+        return redirect('index')
 
 
 def user_login(request):
@@ -272,7 +278,6 @@ def user_login(request):
         else:
             form = AuthenticationForm()
             return render(request, "login.html", {'form': form, 'alert_msg': MESSAGES['error_password']})
-            # return redirect('index')
     else:
         form = AuthenticationForm()
         return render(request, "login.html", {'form': form})
@@ -326,14 +331,14 @@ def activity_dashboard(request, activity_type):
 @login_required
 def activity_calendar(request, activity_type):
     today = datetime.today()
-    cur_date = datetime(day=today.day, month=today.month, year=today.year) - timedelta(1)
+    cur_date = datetime(day=today.day, month=today.month, year=today.year)
     date_ahead = cur_date + timedelta(7)  # TODO mudar aqui pra pegar a do dia e quando o usuario pedir
     user = MyUser.objects.get(email=request.user)
     data = []
     if activity_type == 'gym':
         return render(request, 'calendar_dashboard.html', {'user_schedule': user_schedule(request)})
     elif activity_type == 'parking':
-        stalls_query = Stall.objects.filter(condo=user.condo)
+        stalls_query = Stall.objects.filter(condo=user.condo, stall_type='V')
         reservations_query = StallReservation.objects.filter(date__gte=cur_date, date__lte=date_ahead)
         data = prepare_activity_schedule(cur_date, stalls_query, reservations_query, 'parking', 'stall_id',
                                          'stall_label', 1, ['id', 'stall_label'])
@@ -347,25 +352,27 @@ def activity_calendar(request, activity_type):
         for day in [cur_date + timedelta(days=x) for x in range(7)]:
             courts = pd.DataFrame(list(TennisCourt.objects.filter(condo=user.condo).values()))
             reservations = TennisCourtReservation.objects.filter(date__gte=day,
-                                                                 date__lte=day + timedelta(1)).values()
+                                                                 date__lt=day + timedelta(1)).values()
             reservations = reservation_exist(reservations, {'user_id': [], 'court_id': []})
             if not reservations.empty:
                 reservations = split_datetime(reservations, 'date')
-
+            print("reservas")
             print(reservations)
-            print(courts)
             courts = split_time(courts, 'time_slot')
+            print("quadras")
+            print(courts)
             courts = \
                 courts.merge(reservations, left_on=['id'], right_on=['court_id'],
                              how='left', suffixes=('', '_y')).groupby(
                     ['id', 'court_number', 'hour', 'minute']).count()['user_id'].reset_index().rename(
                     columns={'user_id': 'count', 'court_number': 'label'})
-            print("after merge")
+            print("quadras merge")
             print(courts)
             courts.to_dict(orient='records')
+            print(complete_df_to_dict(courts, day, 'tennis', 1))
             data.append(complete_df_to_dict(courts, day, 'tennis', 1))
         data = sum(data, [])
-        print(data)
+
     return render(request, 'activity_calendar.html',
                   {'activity_name': activity_type, 'activity_slots': json.dumps(data)})
 
@@ -457,8 +464,7 @@ def generate_codes(request):
                 created_code = SignupCode.objects.create(code=code, condo_id=condo)
                 codes_id.append(created_code.id)
 
-            return render(request, 'code_generator.html',
-                          context={'codes': codes, 'codes_id': codes_id, 'condo': condo})
+            return render(request, 'code_generator.html', {'codes': codes, 'codes_id': codes_id, 'condo': condo})
         else:
             # TODO: send error message
             return render(request, 'code_generator.html')

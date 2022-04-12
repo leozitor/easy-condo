@@ -243,6 +243,7 @@ class TennisCourtAdmin(admin.ModelAdmin):
         form.base_fields['condo'].queryset = Condo.objects.filter(id=request.user.condo_id)
         return form
 
+
 class TennisCourtReservationAdmin(admin.ModelAdmin):
     list_display = ('id', 'court', 'user', 'date')
 
@@ -320,8 +321,25 @@ class PartyRoomReservationAdmin(admin.ModelAdmin):
         return form
 
 
+class SignupCodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'use_status')
+
+    def get_queryset(self, request):
+        """
+        Filter the objects displayed in the change_list to only
+        display those for the currently signed in user.
+        """
+        qs = super(SignupCodeAdmin, self).get_queryset(request)
+        if request.user.is_admin:
+            return qs
+
+        condo = Condo.objects.get(id=request.user.condo_id)
+        return qs.filter(condo_id__in=condo)
+
+
 # Now register the new UserAdmin...
 admin.site.register(MyUser, UserAdmin)
+admin.site.register(SignupCode, SignupCodeAdmin)
 admin.site.register(Condo, CondoAdmin)
 admin.site.register(GymSession, GymSessionAdmin)
 admin.site.register(Stall, StallAdmin)
@@ -330,7 +348,6 @@ admin.site.register(TennisCourt, TennisCourtAdmin)
 admin.site.register(TennisCourtReservation, TennisCourtReservationAdmin)
 admin.site.register(PartyRoom, PartyRoomAdmin)
 admin.site.register(PartyRoomReservation, PartyRoomReservationAdmin)
-
 
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
