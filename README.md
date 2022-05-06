@@ -19,8 +19,9 @@ Condominium Management System - CSIS Project
 
 `python manage.py createsuperuser`
 
-###App Deployed on Heroku
+### App Deployed and Running on Heroku
 [Easy Condo ](https://easycondapp.herokuapp.com/)
+
 ### Extras Solving Problems
 * Problems Related to Database - Reset Database
   * Delete `db.sqlite3`
